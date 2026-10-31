@@ -31,3 +31,8 @@ export function matchedKeywords(title: string, keywords: string[]): string[] {
       : lower.includes(keyword),
   );
 }
+
+/** Keywords an item mentions, in its title or its description: a GitHub or Hugging Face title is only a name. */
+export function itemKeywords(item: { title: string; subtitle: string | null }, keywords: string[]): string[] {
+  return matchedKeywords(item.subtitle ? `${item.title} ${item.subtitle}` : item.title, keywords);
+}

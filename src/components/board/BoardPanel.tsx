@@ -1,7 +1,7 @@
 "use client";
 
 import { SCORE_UNIT, STATE_LABEL, STATE_NOTE } from "@/lib/board/copy";
-import { matchedKeywords } from "@/lib/board/follows";
+import { itemKeywords } from "@/lib/board/follows";
 import { ageLabel, type Freshness } from "@/lib/board/freshness";
 import type { BoardRow } from "@/lib/board/live";
 import type { Board } from "@/lib/board/types";
@@ -58,7 +58,7 @@ export function BoardPanel({ board, state, rows, keywords, now }: Props) {
 
 function Row({ row, unit, keywords }: { row: BoardRow; unit: string; keywords: string[] }) {
   const { item } = row;
-  const matched = matchedKeywords(item.title, keywords);
+  const matched = itemKeywords(item, keywords);
   const detail = [item.subtitle, item.meta].filter(Boolean).join(" · ");
   return (
     <li className={`grid grid-cols-[2rem_1fr_auto] items-baseline gap-3 py-2 ${matched.length ? "bg-reward-soft" : ""}`}>

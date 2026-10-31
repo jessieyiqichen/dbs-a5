@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanKeyword, followedBoards, keywordsIn, matchedKeywords } from "./follows";
+import { cleanKeyword, followedBoards, itemKeywords, keywordsIn, matchedKeywords } from "./follows";
 import type { Follow } from "./types";
 
 const follows: Follow[] = [
@@ -47,5 +47,16 @@ describe("matchedKeywords", () => {
 
   it("matches Chinese keywords anywhere in the title, since Chinese has no spaces", () => {
     expect(matchedKeywords("国产大模型价格战", keywords)).toEqual(["大模型"]);
+  });
+});
+
+describe("itemKeywords", () => {
+  it("looks in the description too, since a repo's title is only its name", () => {
+    const repo = { title: "thedotmack/claude-mem", subtitle: "Persistent Context Across Sessions for Every Agent" };
+    expect(itemKeywords(repo, ["agent", "rust"])).toEqual(["agent"]);
+  });
+
+  it("works for an item with no description", () => {
+    expect(itemKeywords({ title: "An AI agent", subtitle: null }, ["agent"])).toEqual(["agent"]);
   });
 });

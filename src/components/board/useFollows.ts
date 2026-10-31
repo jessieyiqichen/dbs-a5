@@ -8,7 +8,8 @@ import type { Follow } from "@/lib/board/types";
 export type FollowsState = { kind: "loading" } | { kind: "failed" } | { kind: "ready"; follows: Follow[] };
 
 /** The signed-in person's follows. Each change is saved first and shown after, so the screen never shows a choice the
- *  database refused; `saveFailed` is set when one was refused, for the screen to say so. */
+ *  database refused; `saveFailed` is set when one was refused, for the screen to say so. `add` and `remove` answer
+ *  whether the change was saved. */
 export function useFollows(db: SupabaseClient | null) {
   const [state, setState] = useState<FollowsState>({ kind: "loading" });
   const [saveFailed, setSaveFailed] = useState(false);
@@ -29,30 +30,34 @@ export function useFollows(db: SupabaseClient | null) {
   }, [db]);
 
   const add = useCallback(
-    async (kind: Follow["kind"], value: string) => {
-      if (!db) return;
+    async (kind: Follow["kind"], value: string): Promise<boolean> => {
+      if (!db) return false;
       try {
         const follow = await addFollow(db, kind, value);
         setSaveFailed(false);
         setState((prev) => (prev.kind === "ready" ? { kind: "ready", follows: [...prev.follows, follow] } : prev));
+        return true;
       } catch (error) {
         console.error("Builder's Board: adding a follow failed", { kind, value, error });
         setSaveFailed(true);
+        return false;
       }
     },
     [db],
   );
 
   const remove = useCallback(
-    async (id: string) => {
-      if (!db) return;
+    async (id: string): Promise<boolean> => {
+      if (!db) return false;
       try {
         await removeFollow(db, id);
         setSaveFailed(false);
         setState((prev) => (prev.kind === "ready" ? { kind: "ready", follows: prev.follows.filter((f) => f.id !== id) } : prev));
+        return true;
       } catch (error) {
         console.error("Builder's Board: removing a follow failed", { id, error });
         setSaveFailed(true);
+        return false;
       }
     },
     [db],

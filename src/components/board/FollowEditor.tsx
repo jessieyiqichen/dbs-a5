@@ -8,8 +8,8 @@ import { BOARD_IDS, type Board, type Follow } from "@/lib/board/types";
 interface Props {
   boards: Record<string, Board>;
   follows: Follow[];
-  onAdd: (kind: Follow["kind"], value: string) => Promise<void>;
-  onRemove: (id: string) => Promise<void>;
+  onAdd: (kind: Follow["kind"], value: string) => Promise<boolean>;
+  onRemove: (id: string) => Promise<boolean>;
 }
 
 /** Which boards to show, and which words to pick out on them. Each choice is saved to the person's own follows. */
@@ -62,8 +62,10 @@ function Keywords({ follows, onAdd, onRemove }: { follows: Follow[] } & Pick<Pro
     const keyword = cleanKeyword(draft);
     if (!keyword) return setInvalid(true);
     setInvalid(false);
-    if (!follows.some((f) => f.value === keyword)) await onAdd("keyword", keyword);
+    // Cleared at once, so a second word typed while the first saves starts in an empty box; put back if it didn't save
     setDraft("");
+    if (follows.some((f) => f.value === keyword)) return;
+    if (!(await onAdd("keyword", keyword))) setDraft(draft);
   };
 
   return (

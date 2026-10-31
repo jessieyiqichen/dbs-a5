@@ -15,9 +15,9 @@ Brief: a worker that runs every few seconds, fetches a live source and saves onl
 ## What Assignment 5 adds (user decisions 2026-10-30)
 - Source: the public job boards Nudge already reads (Greenhouse, Ashby, Lever), for the companies people follow. Chosen over prediction markets (no politics), Hacker News and Hugging Face (not interesting to the user), Ticketmaster (no live sales data), Divvy and the UChicago shuttles (the official apps already show "now"). The user chose meaning and reuse over a source that moves every second.
 - Measured before building (10 Greenhouse companies, about 6 hours apart, Friday evening): 4 new roles, 7 closed, 81 edited, so about 2 new or closed roles an hour. New roles can't be promised during a demo.
-- Angle: don't let the roles you want slip away while you put off applying. LinkedIn alerts help you find roles; Nudge pushes you to act on them.
-- Titi is the worker on patrol: the worker checks one company per run (the one checked longest ago), so the page always shows the latest check; stale = Titi asleep, down = Titi lost.
+- The worker checks one company per run (the one checked longest ago), so the board always shows a fresh check even when no roles change.
 - Form (user, 2026-10-30): a departures board, like an airport screen. One row per followed company with columns open roles, new today, just closed, last checked; when the worker finishes a company its row flips. A line under the board shows the newest role. The row's "last checked" moves every run, so the board moves even when no roles change.
+- Standalone page (user, 2026-10-30): the board is its own page at `/board`, outside Nudge's tabs and without Titi, with its own departures-board look. It still needs sign-in (Clerk), and its follow list is the same `companies` rows Nudge uses, so following a company in one shows up in the other. The Vercel link handed in points at `/board`.
 - Same Supabase project and Clerk app as A4, so classmates keep their accounts. A5 only adds tables; it does not change A4's tables, so the A4 site keeps working.
 
 # Nudge · DBS Assignment 4 (Full Stack App), extended from Assignment 3

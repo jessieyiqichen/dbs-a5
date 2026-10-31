@@ -8,6 +8,17 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+# Nudge · DBS Assignment 5 (Live Data System), extended from Assignment 4
+
+Brief: a worker that runs every few seconds, fetches a live source and saves only what changed, with a page that updates on its own (Supabase Edge Function + Supabase Cron + Realtime). Due Tue 2026-11-03 17:30. A4 stays as it is at dbs-a4.vercel.app; this repo was copied from dbs-a4 `main` (7ae4aad) on 2026-10-30.
+
+## What Assignment 5 adds (user decisions 2026-10-30)
+- Source: the public job boards Nudge already reads (Greenhouse, Ashby, Lever), for the companies people follow. Chosen over prediction markets (no politics), Hacker News and Hugging Face (not interesting to the user), Ticketmaster (no live sales data), Divvy and the UChicago shuttles (the official apps already show "now"). The user chose meaning and reuse over a source that moves every second.
+- Measured before building (10 Greenhouse companies, about 6 hours apart, Friday evening): 4 new roles, 7 closed, 81 edited, so about 2 new or closed roles an hour. New roles can't be promised during a demo.
+- Angle: don't let the roles you want slip away while you put off applying. LinkedIn alerts help you find roles; Nudge pushes you to act on them.
+- Titi is the worker on patrol: the worker checks one company per run (the one checked longest ago), so the page always shows the latest check; stale = Titi asleep, down = Titi lost.
+- Same Supabase project and Clerk app as A4, so classmates keep their accounts. A5 only adds tables; it does not change A4's tables, so the A4 site keeps working.
+
 # Nudge · DBS Assignment 4 (Full Stack App), extended from Assignment 3
 
 ## What Assignment 4 adds (user decisions 2026-10-20/21)

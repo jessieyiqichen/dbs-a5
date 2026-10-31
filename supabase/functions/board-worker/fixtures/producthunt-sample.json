@@ -1,0 +1,12 @@
+{
+  "_note": "Built by hand from the Product Hunt API v2 docs (posts query, RANKING order), not a saved response: no token was available when the fixtures were saved. Replace with a real response once PRODUCTHUNT_TOKEN works.",
+  "data": {
+    "posts": {
+      "edges": [
+        { "node": { "id": "1001", "name": "Example product A", "tagline": "A one-line pitch", "url": "https://www.producthunt.com/products/example-a", "votesCount": 412, "commentsCount": 37 } },
+        { "node": { "id": "1002", "name": "Example product B", "tagline": "Another one-line pitch", "url": "https://www.producthunt.com/products/example-b", "votesCount": 268, "commentsCount": 19 } },
+        { "node": { "id": "1003", "name": "", "tagline": "No name, should be skipped", "url": "https://www.producthunt.com/products/example-c", "votesCount": 5, "commentsCount": 0 } }
+      ]
+    }
+  }
+}

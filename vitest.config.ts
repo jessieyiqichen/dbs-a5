@@ -6,7 +6,10 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
-    include: ["src/**/*.test.ts"],
-    coverage: { include: ["src/lib/**/*.ts"], exclude: ["src/lib/**/*.test.ts"] },
+    include: ["src/**/*.test.ts", "supabase/functions/**/*.test.ts"],
+    coverage: {
+      include: ["src/lib/**/*.ts", "supabase/functions/*/lib/**/*.ts"],
+      exclude: ["src/lib/**/*.test.ts", "supabase/functions/**/*.test.ts"],
+    },
   },
 });

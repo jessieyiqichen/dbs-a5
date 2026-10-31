@@ -8,17 +8,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Nudge · DBS Assignment 5 (Live Data System), extended from Assignment 4
+# Builder's Board · DBS Assignment 5 (Live Data System), built on the Assignment 4 code
 
-Brief: a worker that runs every few seconds, fetches a live source and saves only what changed, with a page that updates on its own (Supabase Edge Function + Supabase Cron + Realtime). Due Tue 2026-11-03 17:30. A4 stays as it is at dbs-a4.vercel.app; this repo was copied from dbs-a4 `main` (7ae4aad) on 2026-10-30.
+Brief: a worker that runs every few seconds, fetches a live source and saves only what changed, with a page that updates on its own (Supabase Edge Function + Supabase Cron + Realtime). Due Tue 2026-11-03 17:30. A4 stays as it is at dbs-a4.vercel.app; this repo was copied from dbs-a4 `main` (7ae4aad) on 2026-10-30 and keeps its Clerk sign-in, Supabase project and deploy setup.
 
-## What Assignment 5 adds (user decisions 2026-10-30)
-- Source: the public job boards Nudge already reads (Greenhouse, Ashby, Lever), for the companies people follow. Chosen over prediction markets (no politics), Hacker News and Hugging Face (not interesting to the user), Ticketmaster (no live sales data), Divvy and the UChicago shuttles (the official apps already show "now"). The user chose meaning and reuse over a source that moves every second.
-- Measured before building (10 Greenhouse companies, about 6 hours apart, Friday evening): 4 new roles, 7 closed, 81 edited, so about 2 new or closed roles an hour. New roles can't be promised during a demo.
-- The worker checks one company per run (the one checked longest ago), so the board always shows a fresh check even when no roles change.
-- Form (user, 2026-10-30): a departures board, like an airport screen. One row per followed company with columns open roles, new today, just closed, last checked; when the worker finishes a company its row flips. A line under the board shows the newest role. The row's "last checked" moves every run, so the board moves even when no roles change.
-- Standalone page (user, 2026-10-30): the board is its own page at `/board`, outside Nudge's tabs and without Titi, with its own departures-board look. It still needs sign-in (Clerk), and its follow list is the same `companies` rows Nudge uses, so following a company in one shows up in the other. The Vercel link handed in points at `/board`.
-- Same Supabase project and Clerk app as A4, so classmates keep their accounts. A5 only adds tables; it does not change A4's tables, so the A4 site keeps working.
+## What Assignment 5 is (user decisions 2026-10-30/31)
+- Builder's Board: the leaderboards builders check every day (Hacker News front page, GitHub trending, Hugging Face trending models, and Product Hunt today once the user has a token) on one board, showing each item's votes, stars or points and its rank, sorted by what is rising fastest in the last hour.
+- Why: leaderboard ranks move slowly, but the numbers (points, stars, votes) move all day, faster in US daytime, when the class meets. Several boards together change on almost every check. No site shows how fast an item is rising or puts the boards side by side; that comes from the worker saving every change (the history is the product).
+- Measured 2026-10-31 around 01:00 Chicago time, the quietest hour: HN front page, 2 of 30 stories changed rank in 60 s and 2 of the top 15 changed points or comments in 90 s.
+- Sources: HN (official Firebase API, no key), GitHub trending (no API: the github.com/trending page, about 15 repos; robots.txt does not disallow it), Hugging Face (`/api/models?sort=trendingScore`, no key), Product Hunt (GraphQL API v2, needs a developer token the user registers; build without it first).
+- Form: a departures board, one row per item that flips when its numbers change; a standalone page at `/board`. Style directions were drafted on a canvas (https://claude.ai/artifact/YTQ27mxXFFgQpSSNcSnHdT); none chosen yet, decided when the page is built.
+- Personal: each person picks which boards and which keywords (AI, agent, design...) they follow; row-level security on those choices.
+- Rejected on the way, in order: job boards (too slow, ~2 new or closed roles an hour), prediction markets (no politics), HN or Hugging Face alone (not interesting), Ticketmaster (no live sales), Divvy and the UChicago shuttles (official apps already show "now"), a job-board departures board (still too slow). Later idea, not in A5: thread items from the board into the questions you are exploring, as in xhs-threads.
+- Same Supabase project and Clerk app as A4; A5 only adds tables and does not change A4's, so the A4 site keeps working.
 
 # Nudge · DBS Assignment 4 (Full Stack App), extended from Assignment 3
 

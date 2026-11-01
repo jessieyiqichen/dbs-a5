@@ -58,7 +58,9 @@ Both were checked by hand: Product Hunt was set to `failed` in the database (dow
 
 ## The free tier, measured
 
-One hour on 2026-11-01, before the rise fix: 257 worker runs wrote 1,712 rows, so an open page received about 2,000 Realtime messages an hour. One page open around the clock would use 1.4 of the 2 million messages a month; five classmates looking for an hour a day use 300,000. Edge Function calls: about 185,000 a month of 500,000. Database: 18 MB of 500 MB, growing about 1 MB a day in `item_history`.
+One hour on 2026-11-01, before the rise fix: 257 worker runs wrote 1,712 rows, so an open page received about 2,000 Realtime messages an hour. One page open around the clock would use 1.4 of the 2 million messages a month; five classmates looking for an hour a day use 300,000. Edge Function calls: Cron calls the worker 360 times an hour whether or not a board is due, about 260,000 a month of 500,000. Database: 18 MB of 500 MB, growing about 1 MB a day in `item_history`.
+
+The same hour after the fix (15:33 to 16:33 UTC): 263 runs wrote 1,389 rows for 739 score changes (the rest are rank moves, mostly the HN front page reordering), and the five-minute rise refresh wrote about 180 rows an hour, so an open page received about 1,830 messages. Had the old code handled the same hour, each of the 739 score changes would have been a second write and the baselines would have been rewritten after every run, so at least 2,570 messages: the fix saves about 30% on a like-for-like hour. One page open around the clock is now 1.3 million messages a month; the HN front page remains two thirds of all writes, so its interval is the lever if that ever matters.
 
 Most of the traffic was the "rise in the last hour" column: a score change was two writes (score, then rise), and after every run the rises of a whole board were recomputed as the hour-ago baseline moved (HN front page alone: 1,095 rows an hour). Now a trigger sets the rise in the same write as the score, and Cron recomputes standing rises every 5 minutes instead of the worker after every run. Numbers and the reasoning: [log.md](log.md), 2026-11-01.
 

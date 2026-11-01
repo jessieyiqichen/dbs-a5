@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ChangeRow } from "@/lib/board/changes";
+import type { HourRow } from "@/lib/board/changes";
 import { SCORE_UNIT } from "@/lib/board/copy";
 import { itemKeywords } from "@/lib/board/follows";
 import { ageLabel } from "@/lib/board/freshness";
@@ -9,51 +9,36 @@ import { BOARD_LOOK } from "@/lib/board/look";
 import { ItemDetail } from "./ItemDetail";
 import { StepLine } from "./StepLine";
 import { useChangeCount } from "./useChangeCount";
+import { useFlip } from "./useFlip";
 
 const number = new Intl.NumberFormat("en-US");
-const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 interface Props {
   /** The rows to show, in the caller's order: a board's ranking, or every board's changes latest first. */
-  rows: ChangeRow[];
+  rows: HourRow[];
   /** Rows folded under the list because nothing happened to them this hour (the feed across boards). */
-  quiet?: ChangeRow[];
+  quiet?: HourRow[];
   keywords: string[];
   now: Date;
-  /** When the person last pressed "Mark all seen" here, or null. */
-  lookedAt: string | null;
-  onLooked: () => void;
   /** Name each row's board: the feed across every followed board. */
   showBoard?: boolean;
 }
 
-/** Rows that each draw their own hour on their own scale (the user, 2026-11-01: not a race, "I want to see each
- *  item's own change", and still a ranking). Rows that changed since the person last looked are on mustard. */
-export function ChangesFeed({ rows, quiet = [], keywords, now, lookedAt, onLooked, showBoard = false }: Props) {
-  const [open, setOpen] = useState<ChangeRow | null>(null);
-  const unseen = rows.filter((r) => r.unseen).length;
+const rowKey = (row: HourRow) => `${row.boardId}|${row.item.key}`;
+
+/** Rows that each draw their own hour on their own scale, and slide to their new place when the order changes (the
+ *  user, 2026-11-01: a ranking that moves, with each item's own change in it, not a race and not a feed). */
+export function HourRows({ rows, quiet = [], keywords, now, showBoard = false }: Props) {
+  const [open, setOpen] = useState<HourRow | null>(null);
+  const list = useFlip<HTMLOListElement>(rows.map(rowKey).join(","));
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-bh-navy px-4 py-2.5 text-bh-off">
-        <p className="flex items-baseline gap-3 font-bh-mono text-[11px]" aria-live="polite">
-          <span className="font-bh-condensed text-3xl leading-none font-black text-bh-mustard tabular-nums">{unseen}</span>
-          <span>
-            {unseen === 1 ? "change" : "changes"} since you looked
-            {lookedAt ? ` at ${TIME.format(new Date(lookedAt))}` : ", in the last hour"}
-          </span>
-        </p>
-        {unseen > 0 && (
-          <button type="button" onClick={onLooked} className="bh-keycap ml-auto min-h-9 border-2 border-bh-off bg-bh-off px-3 font-bh-mono text-[11px] text-bh-navy">
-            Mark all seen
-          </button>
-        )}
-      </div>
       {rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">{showBoard ? "Nothing on your boards has moved in the last hour." : "No rows on this board right now."}</p>
       ) : (
-        <ol>
+        <ol ref={list}>
           {rows.map((row) => (
-            <Row key={`${row.boardId}|${row.item.key}`} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} />
+            <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} />
           ))}
         </ol>
       )}
@@ -64,7 +49,7 @@ export function ChangesFeed({ rows, quiet = [], keywords, now, lookedAt, onLooke
 }
 
 interface RowProps {
-  row: ChangeRow;
+  row: HourRow;
   keywords: string[];
   now: Date;
   showBoard: boolean;
@@ -80,7 +65,7 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
   const still = row.points.length === 0 && item.rise === 0;
   const changes = useChangeCount(item.score);
   return (
-    <li className={`grid grid-cols-[4.5rem_minmax(0,1fr)_5rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_5rem] ${row.unseen ? "bg-bh-mustard" : ""}`}>
+    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_5rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_5rem]">
       {/* A board's own tab is a ranking: the rank leads. The feed across boards: when, then which board */}
       <p className="font-bh-mono text-[11px] leading-snug">
         {showBoard ? (
@@ -121,14 +106,14 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
 }
 
 /** Items that did not move this hour, folded away: their titles and scores only. */
-function Quiet({ rows }: { rows: ChangeRow[] }) {
+function Quiet({ rows }: { rows: HourRow[] }) {
   if (rows.length === 0) return null;
   return (
     <details className="border-t-2 border-bh-navy px-4 py-2 font-bh-mono text-[11px]">
       <summary className="cursor-pointer py-1 text-bh-muted">{rows.length} quiet for an hour</summary>
       <ul className="columns-1 gap-6 py-2 sm:columns-2">
         {rows.map((r) => (
-          <li key={`${r.boardId}|${r.item.key}`} className="flex gap-2 py-0.5">
+          <li key={rowKey(r)} className="flex gap-2 py-0.5">
             <span className="shrink-0 text-bh-muted">#{String(r.rank).padStart(2, "0")}</span>
             <a href={r.item.url} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate underline-offset-4 hover:underline">{r.item.title}</a>
             <span className="ml-auto shrink-0 tabular-nums">{number.format(r.item.score)}</span>

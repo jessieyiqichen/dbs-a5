@@ -5,10 +5,9 @@ import { BOARD_LOOK, LETTER_COLORS } from "@/lib/board/look";
 import { pulse, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
 import { Shape } from "./art/Shape";
-import { ChangesFeed } from "./ChangesFeed";
+import { HourRows } from "./HourRows";
 import { LetterHeading } from "./LetterHeading";
 import { PulseScore } from "./PulseScore";
-import { useLookedAt } from "./useLookedAt";
 import { TREND_MINUTES } from "./useTrends";
 
 /** Which followed board each shown item belongs to (its first, if it sits on two), for the pulse. */
@@ -28,7 +27,6 @@ interface Props {
 
 /** The "All changes" tab: every followed board's changes this hour in one feed, then the pulse of all of them. */
 export function RisingTab({ data, boards, keywords, series, now }: Props) {
-  const [lookedAt, mark] = useLookedAt("all");
   return (
     <div className="flex flex-col gap-10">
       <section aria-labelledby="changes-heading">
@@ -36,7 +34,7 @@ export function RisingTab({ data, boards, keywords, series, now }: Props) {
           <Pictograms boards={boards} />
         </LetterHeading>
         <div className="border-2 border-t-0 border-bh-navy bg-bh-off">
-          <ChangesFeed {...feedRows(changeRows(data, boards, series, lookedAt))} keywords={keywords} now={now} lookedAt={lookedAt} onLooked={mark} showBoard />
+          <HourRows {...feedRows(changeRows(data, boards, series))} keywords={keywords} now={now} showBoard />
         </div>
       </section>
       <section aria-labelledby="pulse-heading">

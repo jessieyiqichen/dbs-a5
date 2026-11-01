@@ -1,25 +1,23 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { ChangeRow } from "@/lib/board/changes";
+import type { HourRow } from "@/lib/board/changes";
 import { STATE_NOTE } from "@/lib/board/copy";
 import { ageLabel, type Freshness } from "@/lib/board/freshness";
 import { BOARD_DOMAIN } from "@/lib/board/look";
 import type { Board } from "@/lib/board/types";
 import { BoardIcon } from "./art/BoardIcon";
-import { ChangesFeed } from "./ChangesFeed";
+import { HourRows } from "./HourRows";
 
 interface Props {
   board: Board;
   state: Freshness;
   /** The board's rows in rank order, each with its own hour. */
-  rows: ChangeRow[];
+  rows: HourRow[];
   keywords: string[];
   now: Date;
   /** Shown between the header and the rows: the board's own pulse. */
   pulse?: ReactNode;
-  lookedAt: string | null;
-  onLooked: () => void;
 }
 
 /** What the header says about a board's last check, in each of the four states (docs/data-flow.md). */
@@ -33,7 +31,7 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 
 /** One leaderboard as a browser window on poster paper (after Aleksandar Savić's windows, docs/references.md): the
  *  site in its title bar, its sign and state, its pulse, then its ranking, each row with its own hour. */
-export function BoardPanel({ board, state, rows, keywords, now, pulse, lookedAt, onLooked }: Props) {
+export function BoardPanel({ board, state, rows, keywords, now, pulse }: Props) {
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
   return (
@@ -64,7 +62,7 @@ export function BoardPanel({ board, state, rows, keywords, now, pulse, lookedAt,
       {state === "loading" && rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">Nothing yet.</p>
       ) : (
-        <ChangesFeed rows={rows} keywords={keywords} now={now} lookedAt={lookedAt} onLooked={onLooked} />
+        <HourRows rows={rows} keywords={keywords} now={now} />
       )}
     </section>
   );

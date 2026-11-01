@@ -18,7 +18,6 @@ import { PulseScore } from "./PulseScore";
 import { RisingTab, boardOfItems } from "./RisingTab";
 import { useFollows } from "./useFollows";
 import { useBoardDb, useBoardLive, useNow } from "./useBoardLive";
-import { useLookedAt } from "./useLookedAt";
 import { usePersisted } from "./usePersisted";
 import { TREND_MINUTES, useTrends } from "./useTrends";
 
@@ -82,8 +81,7 @@ export function BoardScreen() {
             </div>
           </section>
         ) : (
-          // Keyed by tab: each tab remembers on its own when it was last marked seen
-          <div key={open} role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
+          <div role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
             {open === RISING_TAB ? (
               <RisingTab data={data} boards={shown} keywords={keywords} series={trends.series} now={now} />
             ) : (
@@ -106,18 +104,15 @@ interface OneBoardProps {
 
 /** One board in its window, with its own pulse above its ranking. */
 function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
-  const [lookedAt, mark] = useLookedAt(id);
   const board = data.boards[id];
   if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
   return (
     <BoardPanel
       board={board}
       state={freshness(board, now)}
-      rows={rankedRows(data, id, series, lookedAt)}
+      rows={rankedRows(data, id, series)}
       keywords={keywords}
       now={now}
-      lookedAt={lookedAt}
-      onLooked={mark}
       pulse={<PulseScore marks={pulse(series, boardOfItems(data, [id]), now, TREND_MINUTES)} boards={[id]} />}
     />
   );

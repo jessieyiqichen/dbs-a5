@@ -12,7 +12,8 @@ export interface ChangeRow {
   points: Point[];
   /** When it last changed, or null when it rose this hour but its history has not been read yet. */
   at: string | null;
-  /** Changed after the person last looked (or they never have). */
+  /** Changed after the person last looked. Nothing is unseen until a first look is recorded: a page just opened has
+   *  been looked at (the user, 2026-11-01: the whole feed came up yellow). */
   unseen: boolean;
 }
 
@@ -32,7 +33,7 @@ export function changeRows(data: BoardData, boards: BoardId[], series: Series, l
       seen.add(e.key);
       const points = series[e.key] ?? [];
       const at = points.length ? points[points.length - 1].at : null;
-      rows.push({ boardId, rank: e.rank, item: data.items[e.key], points, at, unseen: at !== null && (lookedAt === null || at > lookedAt) });
+      rows.push({ boardId, rank: e.rank, item: data.items[e.key], points, at, unseen: at !== null && lookedAt !== null && at > lookedAt });
     }
   }
   const moved = (r: ChangeRow) => r.points.length > 0 || r.item.rise !== 0;

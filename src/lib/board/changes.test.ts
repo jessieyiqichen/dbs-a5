@@ -38,10 +38,10 @@ describe("changeRows", () => {
     expect(changed[0].at).toBeNull();
   });
 
-  it("marks a change unseen when it landed after the person last looked, or when they never did", () => {
+  it("marks a change unseen only when it landed after the person last looked; nothing is unseen before a first look", () => {
     const { changed } = changeRows(data, ["hn_show"], series, at(10));
     expect(changed.map((r) => [r.item.key, r.unseen])).toEqual([["hn:b", true], ["hn:a", false], ["hn:d", false]]);
-    expect(changeRows(data, ["hn_show"], series, null).changed.every((r) => r.unseen)).toBe(true);
+    expect(changeRows(data, ["hn_show"], series, null).changed.some((r) => r.unseen)).toBe(false);
   });
 
   it("shows an item once across boards, on the first board that has it, with the boards in the given order", () => {

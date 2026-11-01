@@ -84,6 +84,8 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="line-clamp-2 font-bold leading-tight underline-offset-4 hover:underline">
           {item.title}
         </a>
+        {/* What the source says about it: a Product Hunt tagline, a repository's description, a model's task, a paper's lab */}
+        {item.subtitle && <p className="mt-0.5 truncate text-sm text-bh-muted">{item.subtitle}</p>}
         {(showBoard || matched.length > 0) && (
           <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 font-bh-mono text-[11px] text-bh-muted">
             {showBoard && <span className="border border-bh-navy px-1 text-bh-navy">#{row.rank}</span>}

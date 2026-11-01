@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { LOAD_FAILED, SAVE_FAILED, SCORE_UNIT } from "@/lib/board/copy";
-import { followedBoards, keywordsIn } from "@/lib/board/follows";
+import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
 import { boardRows, risingNow, shownKeys } from "@/lib/board/live";
 import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
@@ -56,22 +56,29 @@ export function BoardScreen() {
     <div className="bh-paper flex flex-1 flex-col font-bh text-bh-navy">
       <PosterHero weights={boardWeights(data, shown)} rises={riseLabels(data, shown)} turns={trends.turns} connection={connection} last={trends.last} now={now} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          {!choosing && <BoardTabs tabs={tabs} open={open} onOpen={onOpen} counts={unseen(trends.turns, seen, open)} />}
-          {shown.length > 0 && (
-            <button type="button" onClick={() => setEditing(!editing)} className="bh-keycap ml-auto min-h-11 border-2 border-bh-navy bg-bh-off px-4 font-bold">
-              {editing ? "Done" : "Choose what to follow"}
+        {!choosing && (
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <BoardTabs tabs={tabs} open={open} onOpen={onOpen} counts={unseen(trends.turns, seen, open)} />
+            <button type="button" onClick={() => setEditing(true)} className="bh-keycap ml-auto min-h-11 border-2 border-bh-navy bg-bh-off px-4 font-bold">
+              Choose what to follow
             </button>
-          )}
-        </div>
+          </div>
+        )}
         {follows.saveFailed && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
         {choosing ? (
           <section aria-labelledby="follow-heading">
-            <LetterHeading id="follow-heading" label="Choose what to follow" lines={["CHOOSE", "WHAT TO", "FOLLOW"]}>
-              <p className="max-w-xs font-bh-mono text-[11px] text-bh-off">Saved to your account. Only you see your choices.</p>
+            <LetterHeading id="follow-heading" label="Choose what to follow" lines={["FOLLOW"]}>
+              <div className="flex flex-wrap items-center gap-4">
+                <p className="max-w-xs font-bh-mono text-[11px] text-bh-off">Pick boards and keywords. Saved to your account, seen only by you.</p>
+                {shown.length > 0 && (
+                  <button type="button" onClick={() => setEditing(false)} className="bh-keycap min-h-11 border-2 border-bh-off bg-bh-mustard px-4 font-bold text-bh-navy">
+                    Done · show my boards
+                  </button>
+                )}
+              </div>
             </LetterHeading>
             <div className="border-2 border-t-0 border-bh-navy bg-bh-off p-5">
-              <FollowEditor boards={data.boards} follows={mine} onAdd={follows.add} onRemove={follows.remove} />
+              <FollowEditor boards={data.boards} follows={mine} counts={keywordCounts(data, shown, [...keywordsIn(mine), ...SUGGESTED_KEYWORDS])} onAdd={follows.add} onRemove={follows.remove} />
             </div>
           </section>
         ) : (

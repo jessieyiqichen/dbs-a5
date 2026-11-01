@@ -2,23 +2,27 @@
 
 import { useState, type FormEvent } from "react";
 import { BOARD_BLURB, KEYWORD_INVALID } from "@/lib/board/copy";
-import { cleanKeyword } from "@/lib/board/follows";
-import { BOARD_DOMAIN, BOARD_LOOK, TILE_CLASS } from "@/lib/board/look";
+import { SUGGESTED_KEYWORDS, cleanKeyword } from "@/lib/board/follows";
+import { BOARD_LOOK, TILE_CLASS } from "@/lib/board/look";
 import { BOARD_IDS, type BoardId, type Board, type Follow } from "@/lib/board/types";
 import { Shape } from "./art/Shape";
 
 interface Props {
   boards: Record<string, Board>;
   follows: Follow[];
+  /** How many items on the followed boards each keyword (added or suggested) picks out right now. */
+  counts: Record<string, number>;
   onAdd: (kind: Follow["kind"], value: string) => Promise<boolean>;
   onRemove: (id: string) => Promise<boolean>;
 }
 
 /** Which boards to show, and which words to pick out on them, in the Tape & Tile look: each board is a keycap that
- *  stays pressed while it is followed. Each choice is saved to the person's own follows. */
-export function FollowEditor({ boards, follows, onAdd, onRemove }: Props) {
+ *  stays pressed while it is followed; keywords show how many items they pick out right now. Each choice is saved to
+ *  the person's own follows. */
+export function FollowEditor({ boards, follows, counts, onAdd, onRemove }: Props) {
   const followOf = (kind: Follow["kind"], value: string) => follows.find((f) => f.kind === kind && f.value === value);
   const [busy, setBusy] = useState<string | null>(null);
+  const followed = BOARD_IDS.filter((id) => followOf("board", id)).length;
 
   const toggle = async (id: BoardId) => {
     setBusy(id);
@@ -28,10 +32,12 @@ export function FollowEditor({ boards, follows, onAdd, onRemove }: Props) {
   };
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section aria-labelledby="follow-boards">
-        <h3 id="follow-boards" className="mb-1 text-xl font-extrabold tracking-[-0.02em]">Boards</h3>
-        <p className="mb-4 font-bh-mono text-[11px] text-bh-muted">Press a board to follow it. Each gets its own tab.</p>
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <h3 id="follow-boards" className="text-xl font-extrabold tracking-[-0.02em]">Boards</h3>
+          <p className="font-bh-mono text-[11px]" aria-live="polite">{followed} of {BOARD_IDS.length} followed</p>
+        </div>
         <ul className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
           {BOARD_IDS.map((id) => (
             <li key={id}>
@@ -40,7 +46,7 @@ export function FollowEditor({ boards, follows, onAdd, onRemove }: Props) {
           ))}
         </ul>
       </section>
-      <Keywords follows={follows.filter((f) => f.kind === "keyword")} onAdd={onAdd} onRemove={onRemove} />
+      <Keywords follows={follows.filter((f) => f.kind === "keyword")} counts={counts} onAdd={onAdd} onRemove={onRemove} />
     </div>
   );
 }
@@ -62,35 +68,46 @@ function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string;
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="font-extrabold leading-tight">{name}</span>
         <span className="text-sm leading-snug">{BOARD_BLURB[id]}</span>
-        <span aria-hidden className="mt-1 flex items-center justify-between gap-2 font-bh-mono text-[11px]">
-          <span className="truncate">{BOARD_DOMAIN[id]}</span>
-          <span className={`shrink-0 px-1.5 ${on ? "bg-bh-navy text-bh-off" : "border border-bh-navy"}`}>{on ? "✓ following" : "+ follow"}</span>
-        </span>
+      </span>
+      <span aria-hidden className={`grid size-6 shrink-0 place-items-center border-2 border-bh-navy text-sm font-black ${on ? "bg-bh-navy text-bh-off" : "bg-bh-off"}`}>
+        {on ? "✓" : ""}
       </span>
     </button>
   );
 }
 
-function Keywords({ follows, onAdd, onRemove }: { follows: Follow[] } & Pick<Props, "onAdd" | "onRemove">) {
+interface KeywordProps {
+  follows: Follow[];
+  counts: Record<string, number>;
+  onAdd: Props["onAdd"];
+  onRemove: Props["onRemove"];
+}
+
+function Keywords({ follows, counts, onAdd, onRemove }: KeywordProps) {
   const [draft, setDraft] = useState("");
   const [invalid, setInvalid] = useState(false);
+  const have = new Set(follows.map((f) => f.value));
+  const suggestions = SUGGESTED_KEYWORDS.filter((k) => !have.has(k));
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    const keyword = cleanKeyword(draft);
+  const add = async (raw: string) => {
+    const keyword = cleanKeyword(raw);
     if (!keyword) return setInvalid(true);
     setInvalid(false);
     // Cleared at once, so a second word typed while the first saves starts in an empty box; put back if it didn't save
     setDraft("");
-    if (follows.some((f) => f.value === keyword)) return;
-    if (!(await onAdd("keyword", keyword))) setDraft(draft);
+    if (have.has(keyword)) return;
+    if (!(await onAdd("keyword", keyword))) setDraft(raw);
+  };
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    void add(draft);
   };
 
   return (
     <section aria-labelledby="follow-keywords">
       <h3 id="follow-keywords" className="mb-1 text-xl font-extrabold tracking-[-0.02em]">Keywords</h3>
-      <p className="mb-4 font-bh-mono text-[11px] text-bh-muted">Items that mention one get a chip, on every board.</p>
-      <form onSubmit={(e) => void submit(e)} noValidate>
+      <p className="mb-4 font-bh-mono text-[11px] text-bh-muted">Items that mention one get a chip on every board. The number is how many it picks out now.</p>
+      <form onSubmit={submit} noValidate>
         <label htmlFor="keyword" className="sr-only">A keyword to pick out</label>
         <div className="flex gap-3">
           <input
@@ -109,25 +126,42 @@ function Keywords({ follows, onAdd, onRemove }: { follows: Follow[] } & Pick<Pro
         </div>
         {invalid && <p id="keyword-error" role="alert" className="mt-2 border-2 border-bh-navy bg-bh-mustard px-2 py-1 text-sm font-bold">{KEYWORD_INVALID}</p>}
       </form>
-      {follows.length === 0 ? (
-        <p className="mt-4 font-bh-mono text-xs text-bh-muted">No keywords yet.</p>
-      ) : (
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {follows.map((f) => (
-            <li key={f.id} className="flex items-center border-2 border-bh-cobalt bg-bh-off font-bh-mono text-sm text-bh-cobalt">
-              <span className="px-2">{f.value}</span>
-              <button
-                type="button"
-                onClick={() => void onRemove(f.id)}
-                aria-label={`Stop picking out ${f.value}`}
-                className="grid min-h-9 min-w-9 place-items-center border-l-2 border-bh-cobalt hover:bg-bh-cobalt hover:text-bh-off focus-visible:outline-3 focus-visible:outline-bh-navy"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+      <KeywordChips follows={follows} counts={counts} onRemove={onRemove} />
+      {suggestions.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 font-bh-mono text-[11px]">Try one</p>
+          <ul className="flex flex-wrap gap-2">
+            {suggestions.map((k) => (
+              <li key={k}>
+                <button type="button" onClick={() => void add(k)} className="min-h-9 border-2 border-dashed border-bh-navy bg-bh-off px-2 font-bh-mono text-sm hover:border-solid hover:bg-bh-mustard focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-bh-navy">
+                  + {k} <span className="text-bh-muted">· {counts[k] ?? 0}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
+  );
+}
+
+function KeywordChips({ follows, counts, onRemove }: { follows: Follow[]; counts: Record<string, number>; onRemove: Props["onRemove"] }) {
+  if (follows.length === 0) return <p className="mt-4 font-bh-mono text-xs text-bh-muted">No keywords yet.</p>;
+  return (
+    <ul className="mt-4 flex flex-wrap gap-2">
+      {follows.map((f) => (
+        <li key={f.id} className="flex items-center border-2 border-bh-cobalt bg-bh-off font-bh-mono text-sm text-bh-cobalt">
+          <span className="px-2">{f.value} · {counts[f.value] ?? 0}</span>
+          <button
+            type="button"
+            onClick={() => void onRemove(f.id)}
+            aria-label={`Stop picking out ${f.value}`}
+            className="grid min-h-9 min-w-9 place-items-center border-l-2 border-bh-cobalt hover:bg-bh-cobalt hover:text-bh-off focus-visible:outline-3 focus-visible:outline-bh-navy"
+          >
+            ×
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { cleanKeyword, followedBoards, itemKeywords, keywordsIn, matchedKeywords } from "./follows";
+import { cleanKeyword, followedBoards, itemKeywords, keywordCounts, keywordsIn, matchedKeywords } from "./follows";
+import { readSnapshot } from "./rows";
 import type { Follow } from "./types";
 
 const follows: Follow[] = [
@@ -58,5 +59,17 @@ describe("itemKeywords", () => {
 
   it("works for an item with no description", () => {
     expect(itemKeywords({ title: "An AI agent", subtitle: null }, ["agent"])).toEqual(["agent"]);
+  });
+});
+
+describe("keywordCounts", () => {
+  it("counts the items on the followed boards that mention each keyword, each item once", () => {
+    const data = readSnapshot([], [
+      { board_id: "hn_front", source: "hn", external_id: "1", rank: 1, items: { title: "An AI agent", url: "https://a.com", subtitle: null, meta: null, score: 1, comments: 0, rise_1h: 0 } },
+      { board_id: "hn_show", source: "hn", external_id: "1", rank: 2, items: { title: "An AI agent", url: "https://a.com", subtitle: null, meta: null, score: 1, comments: 0, rise_1h: 0 } },
+      { board_id: "producthunt", source: "producthunt", external_id: "p", rank: 1, items: { title: "Agents for teams", url: "https://b.com", subtitle: null, meta: null, score: 1, comments: 0, rise_1h: 0 } },
+    ]);
+    expect(keywordCounts(data, ["hn_front", "hn_show"], ["agent", "rust"])).toEqual({ agent: 1, rust: 0 });
+    expect(keywordCounts(data, ["hn_front", "producthunt"], ["agent"])).toEqual({ agent: 2 });
   });
 });

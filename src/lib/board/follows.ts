@@ -1,4 +1,4 @@
-import { BOARD_IDS, type BoardId, type Follow } from "./types";
+import { BOARD_IDS, type BoardData, type BoardId, type Follow } from "./types";
 
 /** The follows table allows 1 to 40 characters (its check constraint); the page tidies a keyword before sending it. */
 export const KEYWORD_MAX = 40;
@@ -36,3 +36,14 @@ export function matchedKeywords(title: string, keywords: string[]): string[] {
 export function itemKeywords(item: { title: string; subtitle: string | null }, keywords: string[]): string[] {
   return matchedKeywords(item.subtitle ? `${item.title} ${item.subtitle}` : item.title, keywords);
 }
+
+/** How many items on the followed boards mention each keyword right now (an item on two boards counts once), so the
+ *  follow screen can show what a keyword would pick out. */
+export function keywordCounts(data: BoardData, boards: BoardId[], keywords: string[]): Record<string, number> {
+  const keys = new Set(Object.values(data.entries).filter((e) => boards.includes(e.boardId)).map((e) => e.key));
+  const items = [...keys].map((k) => data.items[k]).filter((item) => item !== undefined);
+  return Object.fromEntries(keywords.map((k) => [k, items.filter((item) => itemKeywords(item, [k]).length > 0).length]));
+}
+
+/** Keywords offered with one press on the follow screen. */
+export const SUGGESTED_KEYWORDS = ["agent", "llm", "open source", "rust", "design", "security"] as const;

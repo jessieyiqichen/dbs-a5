@@ -67,7 +67,7 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
 function TabShape({ tab }: { tab: Exclude<Tab, typeof RISING_TAB> }) {
   const look = BOARD_LOOK[tab];
   return (
-    <span aria-hidden className={`block size-5 overflow-hidden ${TILE_CLASS[look.tile]}`}>
+    <span aria-hidden className={`block size-5 overflow-hidden border-[1.5px] border-bh-navy ${TILE_CLASS[look.tile]}`}>
       <Shape shape={look.shape} color={look.color} size={20} />
     </span>
   );

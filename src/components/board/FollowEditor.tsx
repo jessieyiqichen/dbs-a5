@@ -55,7 +55,8 @@ function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string;
       onClick={onToggle}
       className={`bh-keycap flex h-full w-full items-start gap-3 border-2 border-bh-navy p-3 text-left focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy ${on ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"} ${busy ? "opacity-70" : ""}`}
     >
-      <span aria-hidden className={`block size-11 shrink-0 overflow-hidden ${TILE_CLASS[look.tile]}`}>
+      {/* An ink frame keeps the icon apart from the key, whose pressed mustard is some icons' own tile colour */}
+      <span aria-hidden className={`block size-11 shrink-0 overflow-hidden border-2 border-bh-navy ${TILE_CLASS[look.tile]}`}>
         <Shape shape={look.shape} color={look.color} size={44} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">

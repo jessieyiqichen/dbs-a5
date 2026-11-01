@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changeRows } from "./changes";
+import { changeRows, rankedRows } from "./changes";
 import { readSnapshot } from "./rows";
 import type { Series } from "./trends";
 
@@ -23,6 +23,15 @@ const series: Series = {
   "hn:d": [{ at: at(52), score: 203 }],
   "producthunt:p": [{ at: at(3), score: 131 }],
 };
+
+describe("rankedRows", () => {
+  it("keeps the board's rank order and every row, moved or not, each with its own hour", () => {
+    const rows = rankedRows(data, "hn_show", series, at(10));
+    expect(rows.map((r) => [r.rank, r.item.key, r.at !== null, r.unseen])).toEqual([
+      [1, "hn:a", true, false], [2, "hn:b", true, true], [3, "hn:c", false, false], [4, "hn:d", true, false],
+    ]);
+  });
+});
 
 describe("changeRows", () => {
   it("puts what changed first, latest change on top, and folds the rest away in rank order", () => {

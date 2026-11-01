@@ -22,9 +22,24 @@ export interface Changes {
   quiet: ChangeRow[];
 }
 
-/** Each item on the boards, once (on the first board that has it, boards in the order given), split into what changed
- *  this hour and what did not. `lookedAt` is when the person last marked the feed seen, from browser storage. */
+/** One board as the leaderboard it is: every item in rank order, each with its own hour (the user, 2026-11-01: still
+ *  a ranking, not a feed of changes; only what each row draws is its own change). */
+export function rankedRows(data: BoardData, boardId: BoardId, series: Series, lookedAt: string | null): ChangeRow[] {
+  return allRows(data, [boardId], series, lookedAt).sort((a, b) => a.rank - b.rank);
+}
+
+/** Every followed board's items in one feed, once each (on the first board that has it, boards in the order given),
+ *  split into what changed this hour, latest first, and what did not. */
 export function changeRows(data: BoardData, boards: BoardId[], series: Series, lookedAt: string | null): Changes {
+  const rows = allRows(data, boards, series, lookedAt);
+  const moved = (r: ChangeRow) => r.points.length > 0 || r.item.rise !== 0;
+  const changed = rows.filter(moved).sort(latestFirst);
+  const quiet = rows.filter((r) => !moved(r)).sort((a, b) => a.rank - b.rank);
+  return { changed, quiet };
+}
+
+/** `lookedAt` is when the person last marked the tab seen, from browser storage. */
+function allRows(data: BoardData, boards: BoardId[], series: Series, lookedAt: string | null): ChangeRow[] {
   const seen = new Set<string>();
   const rows: ChangeRow[] = [];
   for (const boardId of boards) {
@@ -36,10 +51,7 @@ export function changeRows(data: BoardData, boards: BoardId[], series: Series, l
       rows.push({ boardId, rank: e.rank, item: data.items[e.key], points, at, unseen: at !== null && lookedAt !== null && at > lookedAt });
     }
   }
-  const moved = (r: ChangeRow) => r.points.length > 0 || r.item.rise !== 0;
-  const changed = rows.filter(moved).sort(latestFirst);
-  const quiet = rows.filter((r) => !moved(r)).sort((a, b) => a.rank - b.rank);
-  return { changed, quiet };
+  return rows;
 }
 
 /** Timed changes newest first; a rise whose time is not known yet after them, biggest first; then by rank. */

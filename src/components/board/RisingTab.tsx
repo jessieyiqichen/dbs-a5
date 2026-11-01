@@ -1,6 +1,6 @@
 "use client";
 
-import { changeRows } from "@/lib/board/changes";
+import { changeRows, type Changes } from "@/lib/board/changes";
 import { BOARD_LOOK, LETTER_COLORS } from "@/lib/board/look";
 import { pulse, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
@@ -36,7 +36,7 @@ export function RisingTab({ data, boards, keywords, series, now }: Props) {
           <Pictograms boards={boards} />
         </LetterHeading>
         <div className="border-2 border-t-0 border-bh-navy bg-bh-off">
-          <ChangesFeed changes={changeRows(data, boards, series, lookedAt)} keywords={keywords} now={now} lookedAt={lookedAt} onLooked={mark} showBoard />
+          <ChangesFeed {...feedRows(changeRows(data, boards, series, lookedAt))} keywords={keywords} now={now} lookedAt={lookedAt} onLooked={mark} showBoard />
         </div>
       </section>
       <section aria-labelledby="pulse-heading">
@@ -48,6 +48,8 @@ export function RisingTab({ data, boards, keywords, series, now }: Props) {
     </div>
   );
 }
+
+const feedRows = ({ changed, quiet }: Changes) => ({ rows: changed, quiet });
 
 /** A row of the followed boards' shapes in the heading colours, as the Accessibility poster sets its pictograms. */
 function Pictograms({ boards }: { boards: BoardId[] }) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { changeRows } from "@/lib/board/changes";
+import { rankedRows } from "@/lib/board/changes";
 import { LOAD_FAILED, SAVE_FAILED, SCORE_UNIT } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
@@ -104,7 +104,7 @@ interface OneBoardProps {
   now: Date;
 }
 
-/** One board in its window, with its own pulse above what changed on it. */
+/** One board in its window, with its own pulse above its ranking. */
 function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
   const [lookedAt, mark] = useLookedAt(id);
   const board = data.boards[id];
@@ -113,7 +113,7 @@ function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
     <BoardPanel
       board={board}
       state={freshness(board, now)}
-      changes={changeRows(data, [id], series, lookedAt)}
+      rows={rankedRows(data, id, series, lookedAt)}
       keywords={keywords}
       now={now}
       lookedAt={lookedAt}

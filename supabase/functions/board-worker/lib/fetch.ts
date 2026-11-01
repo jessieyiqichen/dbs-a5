@@ -35,14 +35,25 @@ async function hn(f: typeof fetch, list: "topstories" | "showstories"): Promise<
   return parseHn(top, items);
 }
 
-/** Midnight in Los Angeles today, when Product Hunt's day starts, as an ISO time with its offset. */
-export function productHuntDayStart(now: Date): string {
+const LOS_ANGELES = "America/Los_Angeles";
+/** Los Angeles midnight is 07:00Z or 08:00Z; the clocks change at 09:00Z or 10:00Z, so 08:00Z still has midnight's offset. */
+const MIDNIGHT_PROBE_HOUR_UTC = 8;
+
+function losAngelesParts(at: Date): Record<string, string> {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", timeZoneName: "longOffset",
-  }).formatToParts(now);
-  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  const offset = part("timeZoneName").replace("GMT", "") || "+00:00";
-  return `${part("year")}-${part("month")}-${part("day")}T00:00:00${offset}`;
+    timeZone: LOS_ANGELES, year: "numeric", month: "2-digit", day: "2-digit", timeZoneName: "longOffset",
+  }).formatToParts(at);
+  return Object.fromEntries(parts.map((p) => [p.type, p.value]));
+}
+
+/** Midnight in Los Angeles today, when Product Hunt's day starts, as an ISO time with its offset.
+ *  The offset is read at that midnight, not now: on 2026-11-01 the clocks fell back at 09:00Z and reading it from
+ *  "now" put the day's start an hour late, so Product Hunt answered with no posts until the next midnight. */
+export function productHuntDayStart(now: Date): string {
+  const today = losAngelesParts(now);
+  const probe = new Date(Date.UTC(Number(today.year), Number(today.month) - 1, Number(today.day), MIDNIGHT_PROBE_HOUR_UTC));
+  const offset = (losAngelesParts(probe).timeZoneName ?? "").replace("GMT", "") || "+00:00";
+  return `${today.year}-${today.month}-${today.day}T00:00:00${offset}`;
 }
 
 async function productHunt(f: typeof fetch, token: string | undefined, now: Date): Promise<BoardItem[]> {

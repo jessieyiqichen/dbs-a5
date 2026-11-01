@@ -54,7 +54,7 @@ The page shows which of four states each board is in, worked out every 5 seconds
 | Stale | Three intervals with no check: the worker or Cron has stopped (wins over down: an old failure says nothing about now) | "not updating · checked 4m ago", hatched header, a note that the numbers may be out of date |
 | Down | The last check failed (the site answered 503, changed its page, the token expired) | "last check failed · 5s ago", red dot, the error under it, the last good rows still shown |
 
-Both were checked by hand: Product Hunt was set to `failed` in the database (down appeared within 5 s) and then left unchecked for three minutes (stale took over).
+Both were checked by hand: Product Hunt was set to `failed` in the database (down appeared within 5 s) and then left unchecked for three minutes (stale took over). Down then happened for real: on 2026-11-01, the day US clocks fell back, the worker read Los Angeles's offset from "now" and placed Product Hunt's midnight an hour late, so the API answered with no posts from 09:00Z on. The page showed the last good ranking with the error under the header, as designed; the fix reads the offset at that midnight instead ([log.md](log.md), 2026-11-01).
 
 ## The free tier, measured
 

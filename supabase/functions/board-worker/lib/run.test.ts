@@ -95,4 +95,11 @@ describe("fetchBoard", () => {
     expect(productHuntDayStart(new Date("2026-10-31T06:00:00Z"))).toBe("2026-10-30T00:00:00-07:00");
     expect(productHuntDayStart(new Date("2026-11-03T20:00:00Z"))).toBe("2026-11-03T00:00:00-08:00");
   });
+
+  it("keeps the offset midnight had on the days the clocks change (Product Hunt found no rows, 2026-11-01)", () => {
+    // Fall back: clocks went 02:00 PDT -> 01:00 PST at 09:00Z; midnight was still PDT, so the day starts at 07:00Z
+    expect(productHuntDayStart(new Date("2026-11-01T15:30:00Z"))).toBe("2026-11-01T00:00:00-07:00");
+    // Spring forward: clocks went 02:00 PST -> 03:00 PDT at 10:00Z; midnight was still PST
+    expect(productHuntDayStart(new Date("2026-03-08T20:00:00Z"))).toBe("2026-03-08T00:00:00-08:00");
+  });
 });

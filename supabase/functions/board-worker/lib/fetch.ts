@@ -8,7 +8,7 @@ const HN_TOP = 30;
 const USER_AGENT = "BuildersBoard/1.0 (class project; https://github.com/jessieyiqichen/dbs-a5)";
 const HN = "https://hacker-news.firebaseio.com/v0";
 const PRODUCT_HUNT_QUERY =
-  "query($after: DateTime!) { posts(order: RANKING, first: 30, postedAfter: $after) " +
+  "query($after: DateTime!) { posts(order: VOTES, first: 30, postedAfter: $after) " +
   "{ edges { node { id name tagline url votesCount commentsCount } } } }";
 
 export interface FetchOptions {

@@ -112,7 +112,7 @@ export function parseHfPapers(raw: unknown): BoardItem[] {
   return ranked("hf_paper", sorted);
 }
 
-/** Product Hunt GraphQL answer to the posts query (RANKING order). An error answer has no data, so gives []. */
+/** Product Hunt GraphQL answer to the posts query (VOTES order: its RANKING put a 0-vote launch first, 2026-10-31). An error answer has no data, so gives []. */
 export function parseProductHunt(raw: unknown): BoardItem[] {
   const posts = isObject(raw) && isObject(raw.data) && isObject(raw.data.posts) ? raw.data.posts.edges : null;
   if (!Array.isArray(posts)) return [];

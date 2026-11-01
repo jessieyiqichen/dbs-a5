@@ -94,6 +94,13 @@ describe("fetchBoard", () => {
     expect(called).toBe(false);
   });
 
+  it("asks Product Hunt for today's launches by votes, the order the page promises", async () => {
+    let body = "";
+    const spy = (async (_url: string, init?: RequestInit) => ((body = String(init?.body)), Response.json({ data: { posts: { edges: [] } } }))) as typeof fetch;
+    await fetchBoard("producthunt", { fetch: spy, productHuntToken: "test-token" }).catch(() => {});
+    expect(body).toContain("order: VOTES");
+  });
+
   it("starts Product Hunt's day at midnight in Los Angeles, in summer and winter time", () => {
     expect(productHuntDayStart(new Date("2026-10-31T06:00:00Z"))).toBe("2026-10-30T00:00:00-07:00");
     expect(productHuntDayStart(new Date("2026-11-03T20:00:00Z"))).toBe("2026-11-03T00:00:00-08:00");

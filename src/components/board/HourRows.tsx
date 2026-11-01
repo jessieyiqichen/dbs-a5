@@ -66,7 +66,7 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
   const changes = useChangeCount(item.score);
   return (
     <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_5rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_5rem]">
-      {/* A board's own tab is a ranking: the rank leads. The feed across boards: when, then which board */}
+      {/* A board's own tab is a ranking: just the rank. The feed across boards: when, then which board */}
       <p className="font-bh-mono text-[11px] leading-snug">
         {showBoard ? (
           <>
@@ -74,10 +74,7 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
             <span className="block text-bh-muted">{BOARD_LOOK[boardId].short}</span>
           </>
         ) : (
-          <>
-            <span className="block text-base font-bold tabular-nums">{String(row.rank).padStart(2, "0")}</span>
-            <span className="block text-bh-muted">{row.at ? ageLabel(row.at, now) : item.rise !== 0 ? "this hour" : "quiet"}</span>
-          </>
+          <span className="block text-base font-bold tabular-nums">{String(row.rank).padStart(2, "0")}</span>
         )}
       </p>
       <div className="min-w-0">

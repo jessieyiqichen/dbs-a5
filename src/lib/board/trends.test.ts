@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addPoints, boardRises, boardWeights, latestChange, movedBoards, pulse, sparkPath, type Series } from "./trends";
+import { addPoints, boardRises, boardWeights, latestChange, movedBoards, pulse, sparkPath, stepPath, type Series } from "./trends";
 import { readSnapshot } from "./rows";
 
 const now = new Date("2026-10-31T20:35:00Z");
@@ -104,5 +104,25 @@ describe("movedBoards", () => {
     const before = readSnapshot([], [entry("hn_front", "hn", "1", "a", 5, 0), entry("hn_show", "hn", "1", "a", 5, 0), entry("producthunt", "producthunt", "p", "c", 9, 0)]);
     const after = readSnapshot([], [entry("hn_front", "hn", "1", "a", 7, 2), entry("hn_show", "hn", "1", "a", 7, 2), entry("producthunt", "producthunt", "p", "c", 9, 0)]);
     expect(movedBoards(before, after).sort()).toEqual(["hn_front", "hn_show"]);
+  });
+});
+
+describe("stepPath", () => {
+  const now = new Date("2026-10-31T20:35:00Z").getTime();
+  const at2 = (minutesAgo: number) => new Date(now - minutesAgo * 60_000).toISOString();
+  // The last hour across, and a shared height: the biggest gain among the rows shown is the full height
+  const frame = { from: now - 60 * 60_000, to: now, base: 100, span: 20 };
+
+  it("holds each level from its time to the next, measured from the score an hour ago, on a shared scale", () => {
+    const path = stepPath([{ at: at2(30), score: 110 }, { at: at2(15), score: 120 }], 100, 20, frame);
+    expect(path).toBe("M0.0 20.0H50.0V10.0H75.0V0.0H100.0V20.0Z");
+  });
+
+  it("is only a baseline when nothing changed in the hour", () => {
+    expect(stepPath([], 100, 20, frame)).toBe("M0.0 20.0H100.0V20.0Z");
+  });
+
+  it("keeps a step inside the box when a score passes the shared top or a point is older than the hour", () => {
+    expect(stepPath([{ at: at2(90), score: 105 }, { at: at2(30), score: 200 }], 100, 20, frame)).toBe("M0.0 20.0V15.0H50.0V0.0H100.0V20.0Z");
   });
 });

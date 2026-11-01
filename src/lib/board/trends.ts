@@ -54,6 +54,33 @@ export function sparkPath(points: Point[], w: number, h: number): string {
   return points.map((p, i) => `${i ? "L" : "M"}${x(times[i]).toFixed(1)} ${y(p.score).toFixed(1)}`).join(" ");
 }
 
+/** The frame a step chart is drawn in: `from`..`to` across (ms, the last hour), and `base`..`base + span` up (the
+ *  score an hour ago, and the biggest gain among the rows shown), so rows side by side can be compared. */
+export interface StepFrame {
+  from: number;
+  to: number;
+  base: number;
+  span: number;
+}
+
+/** An item's last hour as a filled block that holds each score until it changes, then steps up: no diagonals (the
+ *  user found the sloped lines ugly, 2026-10-31). Nothing changed: only the baseline. Out-of-frame values are clamped. */
+export function stepPath(points: Point[], w: number, h: number, f: StepFrame): string {
+  const clamp = (v: number) => Math.min(Math.max(v, 0), 1);
+  const x = (at: string) => (clamp((new Date(at).getTime() - f.from) / Math.max(f.to - f.from, 1)) * w).toFixed(1);
+  const y = (score: number) => (h - clamp((score - f.base) / Math.max(f.span, 1)) * h).toFixed(1);
+  let d = `M0.0 ${h.toFixed(1)}`;
+  let [lastX, lastY] = ["0.0", h.toFixed(1)];
+  for (const point of points) {
+    const [px, py] = [x(point.at), y(point.score)];
+    if (px !== lastX) d += `H${px}`;
+    if (py !== lastY) d += `V${py}`;
+    [lastX, lastY] = [px, py];
+  }
+  if (lastX !== w.toFixed(1)) d += `H${w.toFixed(1)}`;
+  return `${d}V${h.toFixed(1)}Z`;
+}
+
 const sourceOf = (key: string) => key.slice(0, key.indexOf(":")) as Source;
 
 /** The item on a followed board whose score moved most between two reads, for the "last change" line. The worker

@@ -11,7 +11,7 @@ import type { Board } from "@/lib/board/types";
 import { VIEWS, type View } from "@/lib/board/views";
 import { BoardIcon } from "./art/BoardIcon";
 import { RaceView } from "./RaceView";
-import { Sparkline } from "./Sparkline";
+import { StepBar } from "./StepBar";
 import { TilesView } from "./TilesView";
 import { useChangeCount } from "./useChangeCount";
 
@@ -50,6 +50,8 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 export function BoardPanel({ board, state, rows, keywords, series, now, pulse, starKey, view, onView }: Props) {
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
+  // One height for every row's step bar: the biggest gain on the board this hour
+  const span = Math.max(1, ...rows.map((r) => r.item.rise));
   return (
     <section aria-labelledby={`board-${board.id}`} className="border-2 border-bh-navy bg-bh-off shadow-[6px_6px_0_var(--color-bh-navy)]">
       <div aria-hidden className="flex items-center gap-1.5 border-b-2 border-bh-navy bg-bh-page px-3 py-1.5 font-bh-mono text-[11px] text-bh-muted">
@@ -79,13 +81,13 @@ export function BoardPanel({ board, state, rows, keywords, series, now, pulse, s
       {rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">{state === "loading" ? "Nothing yet." : "No rows on this board right now."}</p>
       ) : view === "tiles" ? (
-        <TilesView rows={rows} unit={SCORE_UNIT[board.id]} series={series} starKey={starKey} />
+        <TilesView rows={rows} unit={SCORE_UNIT[board.id]} series={series} starKey={starKey} now={now} />
       ) : view === "race" ? (
         <RaceView rows={rows} unit={SCORE_UNIT[board.id]} boardName={board.name} series={series} starKey={starKey} />
       ) : (
         <ol className="divide-y divide-bh-navy/15">
           {rows.map((row) => (
-            <Row key={row.item.key} row={row} unit={SCORE_UNIT[board.id]} keywords={keywords} points={series[row.item.key] ?? []} star={row.item.key === starKey} />
+            <Row key={row.item.key} row={row} unit={SCORE_UNIT[board.id]} keywords={keywords} points={series[row.item.key] ?? []} star={row.item.key === starKey} span={span} now={now} />
           ))}
         </ol>
       )}
@@ -112,7 +114,7 @@ function ViewPicker({ view, onView }: { view: View; onView: (view: View) => void
   );
 }
 
-function Row({ row, unit, keywords, points, star }: { row: BoardRow; unit: string; keywords: string[]; points: Point[]; star: boolean }) {
+function Row({ row, unit, keywords, points, star, span, now }: { row: BoardRow; unit: string; keywords: string[]; points: Point[]; star: boolean; span: number; now: Date }) {
   const { item } = row;
   const matched = itemKeywords(item, keywords);
   const detail = [item.subtitle, item.meta].filter(Boolean).join(" · ");
@@ -133,7 +135,7 @@ function Row({ row, unit, keywords, points, star }: { row: BoardRow; unit: strin
           </p>
         )}
       </div>
-      <Sparkline points={points} width={72} height={22} className="text-bh-navy" />
+      <StepBar points={points} score={item.score} rise={item.rise} span={span} now={now} className="text-bh-cobalt" />
       <div className="text-right font-bh-mono text-xs tabular-nums">
         <span key={changes} className={`block px-1 ${changes ? "bh-flash" : ""}`}>
           {number.format(item.score)} <span className="text-bh-muted">{unit}</span>

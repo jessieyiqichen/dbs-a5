@@ -4,7 +4,7 @@ import type { BoardRow } from "@/lib/board/live";
 import { TILE_CLASS, type BlockColor } from "@/lib/board/look";
 import type { Point } from "@/lib/board/trends";
 import { itemImage, tileSpans } from "@/lib/board/views";
-import { Sparkline } from "./Sparkline";
+import { StepBar } from "./StepBar";
 import { useChangeCount } from "./useChangeCount";
 
 const number = new Intl.NumberFormat("en-US");
@@ -17,17 +17,20 @@ interface Props {
   unit: string;
   series: Record<string, Point[]>;
   starKey?: string;
+  now: Date;
 }
 
 /** The board as a mosaic: each item a tile, bigger the more of the board's rise it took this hour (lib/board/views.ts).
  *  A repository or paper shows its picture in two inks, the tile's own colour over grey, coming up in full colour on
  *  hover, as the A1 portfolio's screenshots do. Tiles touch edge to edge, as on the poster. */
-export function TilesView({ rows, unit, series, starKey }: Props) {
+export function TilesView({ rows, unit, series, starKey, now }: Props) {
   const spans = tileSpans(rows);
+  // One height for every tile's step bar: the biggest gain among them this hour
+  const top = Math.max(1, ...rows.map((r) => r.item.rise));
   return (
     <ol className="grid grid-flow-dense auto-rows-[12rem] grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
       {rows.map((row, i) => (
-        <TileItem key={row.item.key} row={row} unit={unit} points={series[row.item.key] ?? []} span={spans[row.item.key]} color={TURN[i % TURN.length]} star={row.item.key === starKey} />
+        <TileItem key={row.item.key} row={row} unit={unit} points={series[row.item.key] ?? []} span={spans[row.item.key]} color={TURN[i % TURN.length]} star={row.item.key === starKey} top={top} now={now} />
       ))}
     </ol>
   );
@@ -40,9 +43,11 @@ interface ItemProps {
   span: [number, number];
   color: BlockColor;
   star: boolean;
+  top: number;
+  now: Date;
 }
 
-function TileItem({ row, unit, points, span, color, star }: ItemProps) {
+function TileItem({ row, unit, points, span, color, star, top, now }: ItemProps) {
   const { item } = row;
   const image = itemImage(item.key);
   const changes = useChangeCount(item.score);
@@ -67,7 +72,7 @@ function TileItem({ row, unit, points, span, color, star }: ItemProps) {
           <span key={changes} className={`font-bh-mono text-[11px] tabular-nums ${changes ? "bh-flash" : ""}`}>
             {number.format(item.score)} {unit}
           </span>
-          <Sparkline points={points} width={80} height={20} className="min-w-0 flex-1" />
+          <StepBar points={points} score={item.score} rise={item.rise} span={top} now={now} className="min-w-0 flex-1" />
         </span>
       </a>
     </li>

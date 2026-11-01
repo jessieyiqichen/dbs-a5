@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { rankedRows } from "@/lib/board/changes";
-import { LOAD_FAILED, SAVE_FAILED, SCORE_UNIT } from "@/lib/board/copy";
+import { LOAD_FAILED, SAVE_FAILED } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
 import { shownKeys } from "@/lib/board/live";
 import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
-import { boardRises, boardWeights, type Series } from "@/lib/board/trends";
+import { boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
 import { BoardPanel } from "./BoardPanel";
 import { BoardTabs, panelId, tabId } from "./BoardTabs";
@@ -52,7 +52,7 @@ export function BoardScreen() {
 
   return (
     <div className="bh-paper flex flex-1 flex-col font-bh text-bh-navy">
-      <PosterHero weights={boardWeights(data, shown)} rises={riseLabels(data, shown)} turns={trends.turns} connection={connection} last={trends.last} now={now} />
+      <PosterHero weights={boardWeights(data, shown)} turns={trends.turns} connection={connection} now={now} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
         {!choosing && (
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -114,12 +114,6 @@ function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
       now={now}
     />
   );
-}
-
-/** "+96 points" for each board that rose in the last hour, for the poster's legend. */
-function riseLabels(data: BoardData, shown: BoardId[]): Partial<Record<BoardId, string>> {
-  const totals = boardRises(data, shown);
-  return Object.fromEntries(shown.flatMap((id, i) => (totals[i] > 0 ? [[id, `+${totals[i].toLocaleString("en-US")} ${SCORE_UNIT[id]}`]] : [])));
 }
 
 function Skeleton() {

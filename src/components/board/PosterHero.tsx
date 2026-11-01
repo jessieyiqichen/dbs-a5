@@ -2,20 +2,15 @@
 
 import { CONNECTION_LABEL } from "@/lib/board/copy";
 import type { Connection } from "@/lib/board/feed";
-import { ageLabel } from "@/lib/board/freshness";
-import { BOARD_LOOK, TILE_CLASS } from "@/lib/board/look";
+import { TILE_CLASS } from "@/lib/board/look";
 import { mosaic, type Area, type Star, type Tile } from "@/lib/board/mosaic";
 import type { BoardId } from "@/lib/board/types";
 import { Shape } from "./art/Shape";
-import type { LastChange } from "./useTrends";
 
 interface Props {
   weights: { boardId: BoardId; weight: number }[];
-  /** Each board's rise in the last hour, in its own unit, for the legend. */
-  rises: Partial<Record<BoardId, string>>;
   turns: Partial<Record<BoardId, number>>;
   connection: Connection;
-  last: LastChange | null;
   now: Date;
 }
 
@@ -24,8 +19,9 @@ const WIDE = { cols: 12, rows: 2, stage: { col: 0, row: 0, w: 3, h: 2 } };
 const NARROW = { cols: 6, rows: 3, stage: { col: 0, row: 0, w: 3, h: 3 } };
 
 /** The poster across the top, taped to a wall: a stage with the board that rose most and the title woven through it,
- *  beside a mosaic the data lays out (lib/board/mosaic.ts). Under it, in words, what the shapes show. */
-export function PosterHero({ weights, rises, turns, connection, last, now }: Props) {
+ *  beside a mosaic the data lays out (lib/board/mosaic.ts). Nothing under it: the user (2026-11-01) wants the board,
+ *  not a running commentary on its changes. */
+export function PosterHero({ weights, turns, connection, now }: Props) {
   return (
     <section aria-labelledby="board-title" className="bg-bh-cobalt text-bh-off">
       <h1 id="board-title" className="sr-only">Builder&apos;s Board</h1>
@@ -36,10 +32,6 @@ export function PosterHero({ weights, rises, turns, connection, last, now }: Pro
           <Poster weights={weights} turns={turns} {...WIDE} className="hidden md:grid" />
           <Poster weights={weights} turns={turns} {...NARROW} className="grid md:hidden" />
           <Dateline now={now} connection={connection} />
-        </div>
-        <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-          <LastLine last={last} now={now} />
-          <Legend weights={weights} rises={rises} />
         </div>
       </div>
     </section>
@@ -138,33 +130,5 @@ function Dateline({ now, connection }: { now: Date; connection: Connection }) {
         The leaderboards builders check every day. The board that rose most this hour takes the stage.
       </p>
     </div>
-  );
-}
-
-function LastLine({ last, now }: { last: LastChange | null; now: Date }) {
-  if (!last) return <p className="font-bh-mono text-[11px] text-bh-off/80">waiting for the next change</p>;
-  return (
-    <p className="font-bh-mono text-[11px] text-bh-off/80" aria-live="polite">
-      last change · <span className="text-bh-off">{last.title.slice(0, 40)}</span> +{last.delta} {last.unit} · {ageLabel(last.at, now)}
-    </p>
-  );
-}
-
-function Legend({ weights, rises }: { weights: Props["weights"]; rises: Props["rises"] }) {
-  return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label="What the shapes show">
-      {[...weights].sort((a, b) => b.weight - a.weight).map(({ boardId }, i) => {
-        const look = BOARD_LOOK[boardId];
-        return (
-          <li key={boardId} className="flex items-center gap-2 font-bh-mono text-[11px]">
-            <span className={`grid size-5 place-items-center ${TILE_CLASS[look.tile]}`}>
-              <Shape shape={look.shape} color={look.color} size={14} />
-            </span>
-            <span>{look.short}{i === 0 ? " (on stage)" : ""}</span>
-            <span className="text-bh-off/80">{rises[boardId] ?? "quiet"}</span>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

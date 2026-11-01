@@ -9,7 +9,7 @@ import { useChangeCount } from "./useChangeCount";
 
 const number = new Intl.NumberFormat("en-US");
 /** One lane, in rem: a title line over a bar. Lanes are placed by position, so a pass slides a lane to its new place. */
-const LANE = 3.5;
+const LANE = 4;
 
 interface Props {
   rows: BoardRow[];
@@ -28,10 +28,10 @@ export function RaceView({ rows, unit, boardName, series, starKey }: Props) {
   const opened = lanes.find((l) => l.row.item.key === openKey)?.row;
   return (
     <div className="px-4 pt-3 pb-4">
-      <p className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-bh-mono text-[11px] text-bh-muted">
-        <span><span aria-hidden className="mr-1.5 inline-block h-2.5 w-4 bg-bh-mustard align-middle" />{unit} an hour ago</span>
-        <span><span aria-hidden className="mr-1.5 inline-block h-2.5 w-4 bg-bh-red align-middle" />gained since</span>
-        <span>choose a lane for its last hour</span>
+      <p className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-bh-mono text-[11px] text-bh-muted">
+        <span><span aria-hidden className="mr-1.5 inline-block h-3 w-5 rounded-r-full bg-bh-mustard align-middle" />{unit} an hour ago</span>
+        <span><span aria-hidden className="mr-1.5 inline-block h-3 w-5 rounded-r-full bg-bh-red align-middle" />gained since</span>
+        <span>#: its place on the board · choose a lane for its last hour</span>
       </p>
       <ol className="relative" style={{ height: `${lanes.length * LANE}rem` }}>
         {lanes.map((lane, place) => (
@@ -56,28 +56,39 @@ interface LaneProps {
 function RaceLane({ lane, place, unit, star, onOpen }: LaneProps) {
   const { item, rank } = lane.row;
   const changes = useChangeCount(item.score);
+  const end = (lane.before + lane.rise) * 100;
   return (
     <li className="bh-lane absolute inset-x-0" style={{ transform: `translateY(${place * LANE}rem)`, height: `${LANE - 0.5}rem` }}>
       <button
         type="button"
         onClick={onOpen}
-        className="group grid h-full w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-bh-navy"
+        className="group grid h-full w-full grid-cols-[3rem_minmax(0,1fr)_6.5rem] items-center gap-3 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-bh-navy"
       >
-        <span className="font-bh-mono text-xs tabular-nums">{String(place + 1).padStart(2, "0")}</span>
-        <span className="flex min-w-0 flex-col gap-1">
-          <span className="flex min-w-0 items-baseline gap-2">
-            {star && <span className="text-bh-red" aria-label="Rose most this hour">✦</span>}
-            <span className="truncate text-sm font-bold group-hover:underline">{item.title}</span>
-            <span className="shrink-0 font-bh-mono text-[10px] text-bh-muted">#{rank} on the board</span>
-          </span>
-          <span aria-hidden className="relative block h-3 overflow-hidden border-2 border-bh-navy bg-bh-off">
-            <span className="bh-bar absolute inset-y-0 left-0 w-full origin-left bg-bh-mustard" style={{ transform: `scaleX(${lane.before})` }} />
-            <span className="bh-bar absolute inset-y-0 left-0 w-full origin-left bg-bh-red" style={{ transform: `translateX(${lane.before * 100}%) scaleX(${lane.rise})` }} />
+        <span className="font-bh-condensed text-4xl leading-none font-bold tabular-nums">{String(place + 1).padStart(2, "0")}</span>
+        <span className="relative block h-full min-w-0">
+          {/* One bar, mustard for the score an hour ago then red for the rise, cut to length with a half-round end */}
+          <span
+            aria-hidden
+            className="bh-bar absolute inset-0"
+            style={{
+              background: `linear-gradient(to right, var(--color-bh-mustard) ${lane.before * 100}%, var(--color-bh-red) ${lane.before * 100}%)`,
+              clipPath: `inset(0 ${100 - Math.max(end, 3)}% 0 0 round 0 999px 999px 0)`,
+            }}
+          />
+          <span className="relative flex h-full min-w-0 items-center gap-2 px-3 text-[19px] leading-tight font-extrabold tracking-[-0.01em]">
+            {star && <span aria-label="Rose most this hour">✦</span>}
+            <span className="truncate group-hover:underline">{item.title}</span>
           </span>
         </span>
-        <span className="text-right font-bh-mono text-xs tabular-nums">
-          <span key={changes} className={`block px-1 ${changes ? "bh-flash" : ""}`}>{number.format(item.score)} {unit}</span>
-          {item.rise > 0 && <span className="block font-bold"><span aria-hidden className="text-bh-red">▲</span> +{number.format(item.rise)}</span>}
+        <span className="flex flex-col items-end leading-none">
+          <span key={changes} className={`px-1 font-bh-condensed text-[28px] font-bold tabular-nums ${changes ? "bh-flash" : ""}`}>
+            {number.format(item.score)}
+          </span>
+          <span className="mt-1 flex items-center gap-1.5 font-bh-mono text-[10px] whitespace-nowrap text-bh-muted">
+            {item.rise > 0 && <span className="bg-bh-red px-1 font-bh-condensed text-[19px] leading-tight font-bold text-bh-off">+{number.format(item.rise)}</span>}
+            <span>#{rank}</span>
+          </span>
+          <span className="sr-only">{unit}, #{rank} on the board</span>
         </span>
       </button>
     </li>

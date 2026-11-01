@@ -6,7 +6,7 @@ import { DataSync } from "@/components/auth/DataSync";
 import { Notifier } from "@/components/Notifier";
 import { clerkAppearance } from "@/lib/auth/appearance";
 import { clerkLocalization } from "@/lib/auth/copy";
-import { SIGN_IN_PATH, SIGN_UP_PATH } from "@/lib/auth/routes";
+import { BOARD_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from "@/lib/auth/routes";
 import "./globals.css";
 
 // Fredoka for headings and Nunito for text, as in the A2 Trail Quest design system: round and friendly.
@@ -36,8 +36,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           localization={clerkLocalization}
           signInUrl={SIGN_IN_PATH}
           signUpUrl={SIGN_UP_PATH}
-          signInFallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
+          signInFallbackRedirectUrl={BOARD_PATH}
+          signUpFallbackRedirectUrl={BOARD_PATH}
         >
           <DataSync />
           {children}

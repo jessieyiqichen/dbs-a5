@@ -36,7 +36,8 @@ export function HourRows({ rows, quiet = [], keywords, now, showBoard = false }:
       {rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">{showBoard ? "Nothing on your boards has moved in the last hour." : "No rows on this board right now."}</p>
       ) : (
-        <ol ref={list}>
+        // A window of a fixed height that scrolls, so a 30-row board does not stretch the page (user, 2026-11-01)
+        <ol ref={list} className="max-h-[34rem] overflow-y-auto overscroll-contain">
           {rows.map((row) => (
             <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} />
           ))}

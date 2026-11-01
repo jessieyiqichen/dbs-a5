@@ -13,6 +13,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // This deployment is Builder's Board (Assignment 5): the front door is the board, not Nudge's Today page
+  async redirects() {
+    return [{ source: "/", destination: "/board", permanent: false }];
+  },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

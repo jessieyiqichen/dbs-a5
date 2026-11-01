@@ -7,7 +7,8 @@ export const AUTH_INTRO = "Hi, I'm Titi! I turn your big job-search goal into to
  *  email, a password, a code or Google are written out here (user, 2026-10-26: cover the edge cases too). */
 export const clerkLocalization = {
   signIn: {
-    start: { subtitle: "Good to see you again!" },
+    // Clerk would say "Sign in to Nudge", the Clerk app's name; this deployment is the board (2026-11-01)
+    start: { title: "Sign in", subtitle: "Good to see you again!" },
     alternativeMethods: {
       subtitle: "Pick another way to sign in",
       getHelp: { content: "Can't get in? Email us and we'll help you back into your account" },
@@ -19,7 +20,7 @@ export const clerkLocalization = {
     noAvailableMethods: { message: "This account has no way to sign in yet, try another email" },
   },
   signUp: {
-    start: { subtitle: "It's free and takes a minute", subtitleCombined: "It's free and takes a minute" },
+    start: { title: "Create your account", subtitle: "It's free and takes a minute", subtitleCombined: "It's free and takes a minute" },
     continue: { subtitle: "Just a few more details and you're in" },
   },
   formFieldError__matchingPasswords: "Passwords match",

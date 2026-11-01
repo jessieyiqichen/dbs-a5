@@ -1,13 +1,14 @@
 import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { AuthScreen } from "@/components/auth/AuthScreen";
+import { BoardAuthScreen } from "@/components/board/BoardAuthScreen";
+import { boardClerkAppearance } from "@/lib/board/clerkAppearance";
 
-export const metadata: Metadata = { title: "Sign in · Nudge" };
+export const metadata: Metadata = { title: "Sign in · Builder's Board" };
 
 export default function SignInPage() {
   return (
-    <AuthScreen>
-      <SignIn />
-    </AuthScreen>
+    <BoardAuthScreen>
+      <SignIn appearance={boardClerkAppearance} />
+    </BoardAuthScreen>
   );
 }

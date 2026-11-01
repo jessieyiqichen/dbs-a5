@@ -28,6 +28,7 @@ export const clerkLocalization = {
   formFieldError__verificationLinkExpired: "That link expired, ask for a new one",
   unstable__errors: {
     form_identifier_not_found: "No account with that email yet, check it or sign up",
+    external_account_not_found: "No account with that Google account yet, sign up with it instead",
     form_password_incorrect: "That password isn't right, try again or use another method",
     form_password_or_identifier_incorrect: "That email or password isn't right, try again",
     form_code_incorrect: "That code isn't right, check the email we sent and try again",

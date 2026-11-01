@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicPath } from "./routes";
+import { isBoardPath, isPublicPath } from "./routes";
 
 describe("isPublicPath: which pages a signed-out visitor may open", () => {
   it("opens the sign-in and sign-up pages, with every step Clerk adds under them", () => {
@@ -18,5 +18,16 @@ describe("isPublicPath: which pages a signed-out visitor may open", () => {
     for (const path of ["/sign-inside", "/sign-up-later", "/goals/sign-in"]) {
       expect(isPublicPath(path), path).toBe(false);
     }
+  });
+});
+
+describe("isBoardPath: pages that are Builder's Board, not Nudge", () => {
+  it("is the board and anything under it", () => {
+    expect(isBoardPath("/board")).toBe(true);
+    expect(isBoardPath("/board/anything")).toBe(true);
+  });
+
+  it("is no Nudge page, nor one that only starts with the same letters", () => {
+    for (const path of ["/", "/goals", "/boardroom", "/sign-in"]) expect(isBoardPath(path), path).toBe(false);
   });
 });

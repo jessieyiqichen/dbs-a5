@@ -9,3 +9,10 @@ const PUBLIC_PATHS = [SIGN_IN_PATH, SIGN_UP_PATH];
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
+
+/** Builder's Board (A5) lives inside this app but is not Nudge: Nudge's goal sync and reminders stay off there. */
+export const BOARD_PATH = "/board";
+
+export function isBoardPath(pathname: string): boolean {
+  return pathname === BOARD_PATH || pathname.startsWith(`${BOARD_PATH}/`);
+}

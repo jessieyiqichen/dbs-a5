@@ -25,7 +25,8 @@ interface Listeners {
 export class BoardFeed {
   private data: BoardData | null = null;
   private held: Change[] = [];
-  private reading = false;
+  /** Reads in flight. */
+  private reading = 0;
   private needsRead = true;
   private stopped = false;
   private channel: RealtimeChannel | null = null;
@@ -33,8 +34,12 @@ export class BoardFeed {
 
   constructor(private readonly db: SupabaseClient, private readonly listeners: Listeners) {}
 
+  /** Reads at once, so the boards show even if Realtime cannot join, and reads again once it has (needsRead), to
+   *  catch anything written between the first read and the subscription. */
   start(): void {
     this.join();
+    void this.read();
+    this.needsRead = true;
   }
 
   stop(): void {
@@ -63,6 +68,9 @@ export class BoardFeed {
     console.error(`Builder's Board: Realtime ${status}`, reason ?? "no reason given");
     this.needsRead = true;
     this.listeners.onConnection("reconnecting");
+    // Realtime retries an errored channel with the token it joined with; after a sleep that one has long expired
+    // ("Token has expired 1541 seconds ago", 2026-10-31), so it is replaced first. setAuth() asks Clerk again.
+    if (status === "CHANNEL_ERROR") void this.db.realtime.setAuth();
     if (status === "CLOSED") this.rejoin = setTimeout(() => this.joinAgain(), REJOIN_AFTER_MS);
   }
 
@@ -73,21 +81,24 @@ export class BoardFeed {
   }
 
   private receive(change: Change): void {
-    if (this.data && !this.reading) this.show(applyChange(this.data, change));
+    if (this.data && this.reading === 0) this.show(applyChange(this.data, change));
     else this.held = [...this.held, change];
   }
 
+  /** Two reads can overlap (one at start, one on joining), and either may have been taken before a held change was
+   *  written, so held changes are laid over every read's result and kept until no read is left. Laying the same
+   *  change twice does no harm: each carries its whole row. */
   private async read(): Promise<void> {
-    this.reading = true;
+    this.reading += 1;
     this.needsRead = false;
     try {
       const fresh = await loadBoardData(this.db);
+      this.reading -= 1;
       const pending = this.held;
-      this.held = [];
-      this.reading = false;
+      if (this.reading === 0) this.held = [];
       this.show(pending.reduce(applyChange, fresh));
     } catch (error) {
-      this.reading = false;
+      this.reading -= 1;
       this.needsRead = true;
       console.error("Builder's Board: reading the boards failed", error);
       if (!this.data && !this.stopped) this.listeners.onFailed();

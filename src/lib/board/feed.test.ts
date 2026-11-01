@@ -22,7 +22,9 @@ function fakeDb() {
   let score = 100;
   const reads: (() => void)[] = [];
   const channels: { status: (s: string) => void; push: (payload: unknown) => void }[] = [];
+  const auth = { calls: 0 };
   const db = {
+    realtime: { setAuth: async () => void (auth.calls += 1) },
     from: (table: string) => ({
       select: () =>
         new Promise((resolve) => {
@@ -44,6 +46,7 @@ function fakeDb() {
   };
   return {
     db: db as unknown as SupabaseClient,
+    auth,
     channels,
     setScore: (n: number) => void (score = n),
     /** Lets every read in flight answer, then waits for the feed to handle it. */
@@ -106,6 +109,22 @@ describe("BoardFeed", () => {
 
     expect(scoreOf(shown)).toBe(150);
     expect(states).toEqual(["live", "reconnecting", "live"]);
+  });
+
+  it("shows the boards even when Realtime cannot join", async () => {
+    const fake = fakeDb();
+    let shown: BoardData | null = null;
+    new BoardFeed(fake.db, { onData: (d) => (shown = d), onFailed: () => {}, onConnection: () => {} }).start();
+    await fake.answerReads();
+    expect(scoreOf(shown)).toBe(100);
+  });
+
+  it("asks for a fresh token when the channel fails, so its retry is not refused for the same expired one", () => {
+    const fake = fakeDb();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    new BoardFeed(fake.db, { onData: () => {}, onFailed: () => {}, onConnection: () => {} }).start();
+    fake.channels[0].status("CHANNEL_ERROR");
+    expect(fake.auth.calls).toBe(1);
   });
 
   it("stops listening and never rejoins once stopped", () => {

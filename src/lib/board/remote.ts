@@ -2,6 +2,7 @@
 // signed-in person may read the boards, and only their own follows.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BOARD_COLUMNS, ENTRY_WITH_ITEM_COLUMNS, ITEM_COLUMNS, readSnapshot, rowKey, rowToItem } from "./rows";
+import type { Series } from "./trends";
 import type { BoardData, Follow, Item } from "./types";
 
 type Db = Pick<SupabaseClient, "from">;
@@ -59,4 +60,29 @@ export async function addFollow(db: Db, kind: Follow["kind"], value: string): Pr
 export async function removeFollow(db: Db, id: string): Promise<void> {
   const { error } = await db.from("follows").delete().eq("id", id);
   check("follows", error);
+}
+
+/** Supabase answers at most 1,000 rows a request, so history is read page by page. */
+const HISTORY_PAGE = 1000;
+
+/** The score history since `since` for the items the page shows, oldest first. Signed-in people may read it (RLS). */
+export async function loadHistory(db: Db, keys: string[], since: string): Promise<Series> {
+  const split = (key: string) => [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)] as const;
+  const bySource = Map.groupBy(keys.map(split), ([source]) => source);
+  // Built up here and handed back once, so no one else ever sees it half filled
+  const series: Series = {};
+  for (const [source, pairs] of bySource) {
+    for (let from = 0; ; from += HISTORY_PAGE) {
+      const { data, error } = await db.from("item_history").select("external_id, score, at")
+        .eq("source", source).in("external_id", pairs.map(([, id]) => id)).gte("at", since)
+        .order("at").range(from, from + HISTORY_PAGE - 1);
+      check("item_history", error);
+      for (const row of data ?? []) {
+        if (typeof row.external_id !== "string" || typeof row.at !== "string" || !Number.isFinite(Number(row.score))) continue;
+        (series[`${source}:${row.external_id}`] ??= []).push({ at: row.at, score: Number(row.score) });
+      }
+      if ((data ?? []).length < HISTORY_PAGE) break;
+    }
+  }
+  return series;
 }

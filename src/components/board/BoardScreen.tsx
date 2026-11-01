@@ -1,124 +1,139 @@
 "use client";
 
 import { useState } from "react";
-import { CONNECTION_LABEL, LOAD_FAILED, ROWS_PER_BOARD, SAVE_FAILED } from "@/lib/board/copy";
+import { LOAD_FAILED, SAVE_FAILED, SCORE_UNIT } from "@/lib/board/copy";
 import { followedBoards, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
-import { boardRows, type SortOrder } from "@/lib/board/live";
-import { BoardPanel } from "./BoardPanel";
+import { boardRows, risingNow, shownKeys } from "@/lib/board/live";
+import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
+import { boardRises, boardWeights, pulse, type Series } from "@/lib/board/trends";
+import type { BoardData, BoardId, Follow } from "@/lib/board/types";
+import { VIEWS, type View } from "@/lib/board/views";
+import { BoardPanel, VIEW_ROWS } from "./BoardPanel";
+import { BoardTabs, panelId, tabId } from "./BoardTabs";
 import { FollowEditor } from "./FollowEditor";
+import { PosterHero } from "./PosterHero";
+import { PulseScore } from "./PulseScore";
+import { RisingTab, boardOfItems } from "./RisingTab";
 import { useFollows } from "./useFollows";
-import { useBoardDb, useBoardLive, useNow, type Connection } from "./useBoardLive";
+import { useBoardDb, useBoardLive, useNow } from "./useBoardLive";
+import { usePersisted } from "./usePersisted";
+import { TREND_MINUTES, useTrends } from "./useTrends";
 
-const SORTS: { value: SortOrder; label: string }[] = [
-  { value: "rank", label: "By rank" },
-  { value: "rising", label: "Rising in the last hour" },
-];
+/** The most rows any view shows, so every view has its trend lines ready. */
+const MOST_ROWS = Math.max(...Object.values(VIEW_ROWS));
+const readView = (stored: string | null): View => VIEWS.find((v) => v === stored) ?? "race";
 
-/** Builder's Board: the boards someone follows, updating as the worker writes. With nothing followed yet, the screen
- *  opens on choosing what to follow. */
+/** Builder's Board: a poster banner the data draws, then a tab per followed board and one for what is rising
+ *  (user, 2026-10-31: the boards were at the bottom of a long page). */
 export function BoardScreen() {
   const db = useBoardDb();
   const { load, connection } = useBoardLive(db);
   const follows = useFollows(db);
   const now = useNow();
-  const [sort, setSort] = useState<SortOrder>("rank");
   const [editing, setEditing] = useState(false);
+  const [view, setView] = usePersisted<View>("bb-view-2", readView);
+  const [remembered, setRemembered] = usePersisted<string>("bb-tab", (s) => s ?? "");
+  const [seen, setSeen] = useState<Moves>({});
+
+  const data = load.kind === "ready" ? load.data : null;
+  const mine = follows.state.kind === "ready" ? follows.state.follows : [];
+  const shown = followedBoards(mine);
+  const trends = useTrends(db, data, data ? shownKeys(data, shown, MOST_ROWS) : []);
 
   if (load.kind === "failed" || follows.state.kind === "failed") return <Message text={LOAD_FAILED} />;
-  if (load.kind === "loading" || follows.state.kind === "loading") return <Skeleton />;
-
-  const data = load.data;
-  const mine = follows.state.follows;
-  const shown = followedBoards(mine);
-  const keywords = keywordsIn(mine);
+  if (!data || follows.state.kind === "loading") return <Skeleton />;
+  const tabs = tabsFor(shown);
+  const open = pickTab(tabs, remembered);
   const choosing = editing || shown.length === 0;
+  const onOpen = (tab: Tab) => {
+    setSeen((s) => markSeen(markSeen(s, trends.turns, open), trends.turns, tab));
+    setRemembered(tab);
+  };
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Builder&apos;s Board</h1>
-          <ConnectionNote connection={connection} />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!choosing && <SortPicker sort={sort} onChange={setSort} />}
+    <div className="bh-paper flex flex-1 flex-col font-bh text-bh-navy">
+      <PosterHero weights={boardWeights(data, shown)} rises={riseLabels(data, shown)} turns={trends.turns} connection={connection} last={trends.last} now={now} />
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          {!choosing && <BoardTabs tabs={tabs} open={open} onOpen={onOpen} counts={unseen(trends.turns, seen, open)} />}
           {shown.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setEditing(!editing)}
-              className="min-h-11 rounded-xl border border-line bg-surface px-4 font-semibold text-ink hover:bg-wash"
-            >
+            <button type="button" onClick={() => setEditing(!editing)} className="bh-keycap ml-auto min-h-11 border-2 border-bh-navy bg-bh-off px-4 font-bold">
               {editing ? "Done" : "Choose what to follow"}
             </button>
           )}
         </div>
-      </header>
-      {follows.saveFailed && <p role="alert" className="mb-4 rounded-xl bg-danger-wash px-3 py-2 text-danger">{SAVE_FAILED}</p>}
-      {choosing ? (
-        <FollowEditor boards={data.boards} follows={mine} onAdd={follows.add} onRemove={follows.remove} />
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {shown.filter((id) => data.boards[id]).map((id) => (
-            <BoardPanel
-              key={id}
-              board={data.boards[id]}
-              state={freshness(data.boards[id], now)}
-              rows={boardRows(data, id, sort, ROWS_PER_BOARD)}
-              keywords={keywords}
-              now={now}
-            />
-          ))}
-        </div>
-      )}
-    </main>
-  );
-}
-
-function ConnectionNote({ connection }: { connection: Connection }) {
-  const dot = connection === "live" ? "bg-primary" : "bg-reward";
-  return (
-    <p className="mt-1 flex items-center gap-2 text-sm text-muted" aria-live="polite">
-      <span aria-hidden className={`inline-block size-2 rounded-full ${dot}`} />
-      {CONNECTION_LABEL[connection]}
-    </p>
-  );
-}
-
-function SortPicker({ sort, onChange }: { sort: SortOrder; onChange: (sort: SortOrder) => void }) {
-  return (
-    <div role="radiogroup" aria-label="Order" className="flex rounded-xl border border-line bg-surface p-1">
-      {SORTS.map((s) => (
-        <button
-          key={s.value}
-          type="button"
-          role="radio"
-          aria-checked={sort === s.value}
-          onClick={() => onChange(s.value)}
-          className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${sort === s.value ? "bg-ink text-surface" : "text-ink hover:bg-wash"}`}
-        >
-          {s.label}
-        </button>
-      ))}
+        {follows.saveFailed && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
+        {choosing ? (
+          <div className="border-2 border-bh-navy bg-bh-off p-5">
+            <FollowEditor boards={data.boards} follows={mine} onAdd={follows.add} onRemove={follows.remove} />
+          </div>
+        ) : (
+          <div role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
+            {open === RISING_TAB ? (
+              <RisingTab data={data} boards={shown} series={trends.series} now={now} />
+            ) : (
+              <OneBoard data={data} id={open} follows={mine} series={trends.series} now={now} view={view} onView={setView} />
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
 
+interface OneBoardProps {
+  data: BoardData;
+  id: BoardId;
+  follows: Follow[];
+  series: Series;
+  now: Date;
+  view: View;
+  onView: (view: View) => void;
+}
+
+/** One board in its window, with its own pulse above its rows and its fastest riser starred. */
+function OneBoard({ data, id, follows, series, now, view, onView }: OneBoardProps) {
+  const board = data.boards[id];
+  if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
+  return (
+    <BoardPanel
+      board={board}
+      state={freshness(board, now)}
+      rows={boardRows(data, id, view === "tiles" ? "rising" : "rank", VIEW_ROWS[view])}
+      keywords={keywordsIn(follows)}
+      series={series}
+      now={now}
+      starKey={risingNow(data, [id])[0]?.item.key}
+      view={view}
+      onView={onView}
+      pulse={<PulseScore marks={pulse(series, boardOfItems(data, [id]), now, TREND_MINUTES)} boards={[id]} />}
+    />
+  );
+}
+
+/** "+96 points" for each board that rose in the last hour, for the poster's legend. */
+function riseLabels(data: BoardData, shown: BoardId[]): Partial<Record<BoardId, string>> {
+  const totals = boardRises(data, shown);
+  return Object.fromEntries(shown.flatMap((id, i) => (totals[i] > 0 ? [[id, `+${totals[i].toLocaleString("en-US")} ${SCORE_UNIT[id]}`]] : [])));
+}
+
 function Skeleton() {
   return (
-    <main aria-busy className="mx-auto grid w-full max-w-6xl gap-4 px-4 py-6 lg:grid-cols-2">
+    <div aria-busy className="bh-paper flex flex-1 flex-col">
       <p className="sr-only">Loading the boards</p>
-      {[0, 1].map((i) => (
-        <div key={i} className="h-96 animate-pulse rounded-2xl bg-wash" />
-      ))}
-    </main>
+      <div className="h-72 animate-pulse bg-bh-cobalt" />
+      <div className="mx-auto w-full max-w-6xl px-4 py-6">
+        <div className="h-[28rem] animate-pulse border-2 border-bh-navy/20 bg-bh-off" />
+      </div>
+    </div>
   );
 }
 
 function Message({ text }: { text: string }) {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6">
-      <p role="alert" className="rounded-xl bg-danger-wash px-3 py-2 text-danger">{text}</p>
+    <main className="bh-paper flex flex-1 flex-col px-4 py-8 font-bh">
+      <p role="alert" className="mx-auto w-full max-w-6xl border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold text-bh-navy">{text}</p>
     </main>
   );
 }

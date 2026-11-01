@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyChange, boardRows, missingItems } from "./live";
+import { applyChange, boardRows, missingItems, risingNow, shownKeys } from "./live";
 import { readSnapshot } from "./rows";
 
 const boardRow = {
@@ -84,5 +84,22 @@ describe("boardRows", () => {
     });
     expect(boardRows(data, "hn_front", "rank", 10)).toHaveLength(3);
     expect(missingItems(data)).toEqual([{ source: "hn", externalId: "9" }]);
+  });
+});
+
+describe("risingNow", () => {
+  it("picks the item that gained most in the last hour on each board, in the boards' order", () => {
+    expect(risingNow(snapshot(), ["hn_front"]).map((r) => [r.boardId, r.item.title, r.rank])).toEqual([["hn_front", "Second", 2]]);
+  });
+
+  it("skips a board where nothing rose", () => {
+    const flat = readSnapshot([boardRow], [entryRow("1", 1, "Still", 10, 0)]);
+    expect(risingNow(flat, ["hn_front"])).toEqual([]);
+  });
+});
+
+describe("shownKeys", () => {
+  it("lists the items a board shows by rank or by rise, once each", () => {
+    expect(shownKeys(snapshot(), ["hn_front"], 1).sort()).toEqual(["hn:1", "hn:2"]);
   });
 });

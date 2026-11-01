@@ -189,3 +189,25 @@ body {
   .plus-one { display: none; }
   .bar-fill, .clay-press { transition: none; }
 }
+
+/* Builder's Board (/board only): flat Bauhaus tiles in the muted set of Stripe's Dublin Hackathon posters (studied
+   2026-10-31), after the user chose the Bauhaus hackathon-poster direction. Contrast (checked): navy on page 13.5:1,
+   muted on page 5.4:1; off-white on cobalt 6.6:1, on green 10.4:1, on navy 15.1:1; navy on mustard 8.6:1, on off-white
+   15.1:1; off-white on red only 3.6:1, so red carries large text alone. */
+/* inline: the board's font variables are set on its layout, not the root, so the utilities must read them in place */
+@theme inline {
+  --font-bh: var(--font-schibsted), system-ui, sans-serif;
+  --font-bh-mono: var(--font-martian), ui-monospace, monospace;
+  --font-bh-condensed: var(--font-barlow), "Arial Narrow", sans-serif;
+}
+
+@theme {
+  --color-bh-page: #e9e4d8;
+  --color-bh-off: #f4f1ea;
+  --color-bh-navy: #1b1a2c;
+  --color-bh-muted: #5d5a52;
+  --color-bh-red: #d8503a;
+  --color-bh-cobalt: #2547c7;
+  --color-bh-mustard: #e2b04a;
+  --color-bh-green: #1f3d39;
+}

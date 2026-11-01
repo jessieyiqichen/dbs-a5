@@ -65,3 +65,21 @@ export function missingItems(data: BoardData): { source: string; externalId: str
     return { source: key.slice(0, at), externalId: key.slice(at + 1) };
   });
 }
+
+export interface Riser extends BoardRow {
+  boardId: BoardId;
+}
+
+/** Each board's fastest riser in the last hour, for the strip across the top. A board where nothing rose is left out. */
+export function risingNow(data: BoardData, boardIds: BoardId[]): Riser[] {
+  return boardIds.flatMap((boardId) => {
+    const [top] = boardRows(data, boardId, "rising", 1);
+    return top && top.item.rise > 0 ? [{ ...top, boardId }] : [];
+  });
+}
+
+/** The items the page shows for these boards (the top `limit` by rank and by rise): the ones that get trend lines. */
+export function shownKeys(data: BoardData, boardIds: BoardId[], limit: number): string[] {
+  const keys = boardIds.flatMap((id) => [...boardRows(data, id, "rank", limit), ...boardRows(data, id, "rising", limit)]);
+  return [...new Set(keys.map((row) => row.item.key))];
+}

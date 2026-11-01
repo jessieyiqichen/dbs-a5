@@ -35,9 +35,9 @@ export const STATE_NOTE: Partial<Record<Freshness, string>> = {
   down: "Showing the last good numbers. The worker will try again on its next check.",
 };
 
-export const CONNECTION_LABEL = { connecting: "Connecting", live: "Live updates on", reconnecting: "Reconnecting" } as const;
+export const CONNECTION_LABEL = { connecting: "connecting", live: "live", reconnecting: "reconnecting" } as const;
 
 export const LOAD_FAILED = "The board didn't load. Check your connection, then reload the page.";
 export const SAVE_FAILED = "That change didn't save. Check your connection and try again.";
 export const KEYWORD_INVALID = "Use 1 to 40 characters.";
-export const ROWS_PER_BOARD = 15;
+export const ROWS_PER_BOARD = 8;

@@ -1,6 +1,6 @@
 // Fetches one board from its site and parses it. Uses only the global fetch, so tests can pass a fake one.
 
-import { parseGithubTrending, parseHfModels, parseHfPapers, parseHn, parseProductHunt, parseV2ex } from "./parse.ts";
+import { parseGithubTrending, parseHfModels, parseHfPapers, parseHn, parseProductHunt } from "./parse.ts";
 import type { BoardId, BoardItem } from "./types.ts";
 
 const TIMEOUT_MS = 10_000;
@@ -70,7 +70,5 @@ export async function fetchBoard(board: BoardId, options: FetchOptions = {}): Pr
       return parseHfPapers(await (await get(f, "https://huggingface.co/api/daily_papers?limit=50")).json());
     case "producthunt":
       return productHunt(f, options.productHuntToken, options.now ?? new Date());
-    case "v2ex_hot":
-      return parseV2ex(await (await get(f, "https://www.v2ex.com/api/topics/hot.json")).json());
   }
 }

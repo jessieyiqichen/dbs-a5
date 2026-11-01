@@ -5,7 +5,7 @@ import type { Follow } from "./types";
 const follows: Follow[] = [
   { id: "1", kind: "board", value: "hn_front" },
   { id: "2", kind: "keyword", value: "agent" },
-  { id: "3", kind: "board", value: "v2ex_hot" },
+  { id: "3", kind: "board", value: "producthunt" },
   { id: "4", kind: "keyword", value: "ai" },
   { id: "5", kind: "keyword", value: "大模型" },
 ];
@@ -25,7 +25,7 @@ describe("cleanKeyword", () => {
 describe("followed boards and keywords", () => {
   it("keeps the boards in the order the page lists them, and only known ones", () => {
     const withUnknown = [...follows, { id: "6", kind: "board" as const, value: "reddit" }];
-    expect(followedBoards(withUnknown)).toEqual(["hn_front", "v2ex_hot"]);
+    expect(followedBoards(withUnknown)).toEqual(["hn_front", "producthunt"]);
   });
 
   it("lists the keywords", () => {

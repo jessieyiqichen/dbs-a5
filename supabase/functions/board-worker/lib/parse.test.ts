@@ -6,7 +6,6 @@ import {
   parseHfPapers,
   parseHn,
   parseProductHunt,
-  parseV2ex,
 } from "./parse";
 
 // Saved real responses from 2026-10-31 (Product Hunt is a hand-built sample, see its _note)
@@ -90,16 +89,6 @@ describe("parseHfPapers", () => {
   });
 });
 
-describe("parseV2ex", () => {
-  it("reads replies as the score and the node as the subtitle", () => {
-    const raw = json("v2ex-hot.json");
-    const items = parseV2ex(raw);
-    expect(items).toHaveLength(raw.length);
-    expect(items[0]).toMatchObject({ source: "v2ex", externalId: String(raw[0].id), score: raw[0].replies });
-    expect(items[0].subtitle).toBe(raw[0].node.title);
-  });
-});
-
 describe("parseProductHunt", () => {
   it("reads votes and comments and skips a post with no name", () => {
     const items = parseProductHunt(json("producthunt-sample.json"));
@@ -116,7 +105,8 @@ describe("parseProductHunt", () => {
 
 describe("every parser", () => {
   it("drops rows whose link is not https", () => {
-    const items = parseV2ex([{ id: 1, title: "Plain http", url: "http://example.com", replies: 3, node: { title: "x" } }]);
+    const post = { id: "1", name: "Plain http", url: "http://example.com", votesCount: 3, commentsCount: 0 };
+    const items = parseProductHunt({ data: { posts: { edges: [{ node: post }] } } });
     expect(items).toEqual([]);
   });
 });

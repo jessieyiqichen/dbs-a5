@@ -9,7 +9,6 @@ export const BOARD_LOOK: Record<BoardId, { color: BlockColor; tile: BlockColor; 
   hn_front: { color: "red", tile: "mustard", shape: "quarter", short: "HN" },
   hn_show: { color: "off", tile: "red", shape: "half", short: "Show HN" },
   github_trending: { color: "cobalt", tile: "off", shape: "square", short: "GitHub" },
-  v2ex_hot: { color: "red", tile: "off", shape: "circle", short: "V2EX" },
   hf_models: { color: "off", tile: "green", shape: "circle", short: "HF models" },
   hf_papers: { color: "off", tile: "cobalt", shape: "triangle", short: "Papers" },
   producthunt: { color: "mustard", tile: "navy", shape: "arch", short: "Product Hunt" },
@@ -20,7 +19,6 @@ export const BOARD_DOMAIN: Record<BoardId, string> = {
   hn_front: "news.ycombinator.com",
   hn_show: "news.ycombinator.com/show",
   github_trending: "github.com/trending",
-  v2ex_hot: "v2ex.com/?tab=hot",
   hf_models: "huggingface.co/models",
   hf_papers: "huggingface.co/papers",
   producthunt: "producthunt.com",
@@ -47,5 +45,4 @@ export const SOURCE_UNIT: Record<Source, string> = {
   hf_model: "likes",
   hf_paper: "upvotes",
   producthunt: "votes",
-  v2ex: "replies",
 };

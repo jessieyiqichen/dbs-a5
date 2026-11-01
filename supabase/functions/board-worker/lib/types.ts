@@ -2,17 +2,16 @@
 // and the Edge Function can run it unchanged.
 
 /** Where an item comes from. One item can sit on two boards (a Show HN story is often on the front page too). */
-export type Source = "hn" | "github" | "hf_model" | "hf_paper" | "producthunt" | "v2ex";
+export type Source = "hn" | "github" | "hf_model" | "hf_paper" | "producthunt";
 
-/** The seven leaderboards. Each is checked on its own schedule. */
+/** The six leaderboards (V2EX was dropped 2026-10-31: its hot list is mostly life and career posts). */
 export type BoardId =
   | "hn_front"
   | "hn_show"
   | "github_trending"
   | "hf_models"
   | "hf_papers"
-  | "producthunt"
-  | "v2ex_hot";
+  | "producthunt";
 
 /** One row of a leaderboard, the same shape whichever site it came from. */
 export interface BoardItem {
@@ -20,7 +19,7 @@ export interface BoardItem {
   externalId: string;
   title: string;
   url: string;
-  /** A second line: a description, a tagline, the V2EX node. */
+  /** A second line: a description or a tagline. */
   subtitle: string | null;
   /** A short extra fact, like "+1,140 stars today". */
   meta: string | null;

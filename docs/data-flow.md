@@ -9,7 +9,6 @@ flowchart LR
         GH["GitHub trending<br>web page"]
         HF["Hugging Face API<br>models, Daily Papers"]
         PH["Product Hunt API<br>Developer Token"]
-        V2["V2EX API<br>hot topics"]
     end
 
     Cron["Supabase Cron<br>every 10 s"] -->|"run now"| W["Worker<br>Supabase Edge Function"]
@@ -43,7 +42,7 @@ flowchart LR
 | Step | Sends | If it changes or stops |
 |---|---|---|
 | Supabase Cron → worker | "Run now", every 10 seconds | Cron stops: nothing new is fetched. `boards.last_checked_at` stops moving, so after a few missed checks the page shows **stale**, not a frozen board pretending to be live |
-| Worker → leaderboards | One board per run: the one whose next check is most overdue. Each board has its own interval (V2EX is slower because its API limits calls) | Too fast: a site slows us down or blocks us (V2EX first). A new token is needed: Product Hunt fails until `PRODUCTHUNT_TOKEN` is set |
+| Worker → leaderboards | One board per run: the one whose next check is most overdue. Each board has its own interval (GitHub and Hugging Face models change slowly, so every 5 minutes) | Too fast: a site slows us down or blocks us. A new token is needed: Product Hunt fails until `PRODUCTHUNT_TOKEN` is set |
 | Leaderboards → worker | Today's list: ids, titles, links, a score (points, stars, likes, upvotes, replies or votes), comments, order | A site changes its format (most likely GitHub, which is read from the web page): the worker finds no rows, marks that run **failed** and keeps the last good rows. That board shows **down**; the other six keep updating |
 | Worker → `items`, `board_entries` | Only rows whose title, score, comments or rank changed, with an upsert keyed on (source, id) | Writing every row each run: the board still looks right, but every unchanged row becomes a Realtime message and the free tier's monthly quota is gone in hours |
 | Worker → `item_history` | A row when an item's score changes | Without it there is no "rise in the last hour", the one thing none of the original sites show |

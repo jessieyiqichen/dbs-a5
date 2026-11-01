@@ -2,11 +2,11 @@
 // The worker writes them; the page only reads, except for each person's own follows.
 
 export const BOARD_IDS = [
-  "hn_front", "hn_show", "github_trending", "hf_models", "hf_papers", "producthunt", "v2ex_hot",
+  "hn_front", "hn_show", "github_trending", "hf_models", "hf_papers", "producthunt",
 ] as const;
 export type BoardId = (typeof BOARD_IDS)[number];
 
-export const SOURCES = ["hn", "github", "hf_model", "hf_paper", "producthunt", "v2ex"] as const;
+export const SOURCES = ["hn", "github", "hf_model", "hf_paper", "producthunt"] as const;
 export type Source = (typeof SOURCES)[number];
 
 /** One leaderboard and how its last check went. */

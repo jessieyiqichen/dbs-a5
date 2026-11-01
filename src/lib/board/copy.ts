@@ -9,7 +9,6 @@ export const SCORE_UNIT: Record<BoardId, string> = {
   hf_models: "likes",
   hf_papers: "upvotes",
   producthunt: "votes",
-  v2ex_hot: "replies",
 };
 
 export const BOARD_BLURB: Record<BoardId, string> = {
@@ -19,7 +18,6 @@ export const BOARD_BLURB: Record<BoardId, string> = {
   hf_models: "Models trending on Hugging Face",
   hf_papers: "Today's papers, by upvotes",
   producthunt: "Today's launches, by votes",
-  v2ex_hot: "Hot topics on V2EX, a Chinese builders' forum",
 };
 
 export const STATE_LABEL: Record<Freshness, string> = {

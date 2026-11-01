@@ -64,8 +64,8 @@ describe("latestChange", () => {
   });
 
   it("only looks at the boards the person follows", () => {
-    const before = readSnapshot([], [entry("v2ex_hot", "v2ex", "9", "off-topic", 10, 0), entry("hn_front", "hn", "1", "a story", 50, 0)]);
-    const after = readSnapshot([], [entry("v2ex_hot", "v2ex", "9", "off-topic", 30, 20), entry("hn_front", "hn", "1", "a story", 52, 2)]);
+    const before = readSnapshot([], [entry("producthunt", "producthunt", "9", "not followed", 10, 0), entry("hn_front", "hn", "1", "a story", 50, 0)]);
+    const after = readSnapshot([], [entry("producthunt", "producthunt", "9", "not followed", 30, 20), entry("hn_front", "hn", "1", "a story", 52, 2)]);
     expect(latestChange(before, after, ["hn_front"])).toEqual({ title: "a story", delta: 2, unit: "points" });
     expect(latestChange(before, after, [])).toBeNull();
   });

@@ -84,7 +84,7 @@ describe("runBoard on the saved Hacker News front page", () => {
 describe("fetchBoard", () => {
   it("fails with the site's status when it refuses", async () => {
     const refuse = (async () => new Response("busy", { status: 503 })) as typeof fetch;
-    await expect(fetchBoard("v2ex_hot", { fetch: refuse })).rejects.toThrow("www.v2ex.com answered HTTP 503");
+    await expect(fetchBoard("hf_models", { fetch: refuse })).rejects.toThrow("huggingface.co answered HTTP 503");
   });
 
   it("does not call Product Hunt without a token", async () => {

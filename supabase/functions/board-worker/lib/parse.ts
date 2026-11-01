@@ -112,27 +112,6 @@ export function parseHfPapers(raw: unknown): BoardItem[] {
   return ranked("hf_paper", sorted);
 }
 
-/** V2EX hot topics. Replies is the number that rises. */
-export function parseV2ex(raw: unknown): BoardItem[] {
-  if (!Array.isArray(raw)) return [];
-  const rows = raw.map((t): Row | null => {
-    if (!isObject(t)) return null;
-    const id = count(t.id);
-    const url = httpsUrl(t.url);
-    if (id === null || url === null) return null;
-    return {
-      externalId: String(id),
-      title: text(t.title, MAX_TITLE),
-      url,
-      subtitle: isObject(t.node) ? orNull(text(t.node.title, MAX_SUBTITLE)) : null,
-      meta: null,
-      score: count(t.replies) ?? 0,
-      comments: null,
-    };
-  });
-  return ranked("v2ex", rows);
-}
-
 /** Product Hunt GraphQL answer to the posts query (RANKING order). An error answer has no data, so gives []. */
 export function parseProductHunt(raw: unknown): BoardItem[] {
   const posts = isObject(raw) && isObject(raw.data) && isObject(raw.data.posts) ? raw.data.posts.edges : null;

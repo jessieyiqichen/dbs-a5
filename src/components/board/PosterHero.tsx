@@ -104,7 +104,8 @@ function Words({ front }: { front: boolean }) {
   return (
     <div className={`absolute inset-0 flex flex-col justify-between px-[5%] py-[3%] ${front ? "z-30" : "z-10"}`}>
       {WORDS.map((word, w) => (
-        <p key={word} className={`text-[18.5cqw] leading-none font-black tracking-[-0.05em] lowercase ${w === 1 ? "self-end" : ""}`}>
+        // Front letters carry an off-white halo, so they read over any shape (navy over cobalt alone is 2.3:1)
+        <p key={word} className={`text-[18.5cqw] leading-none font-black tracking-[-0.05em] lowercase ${w === 1 ? "self-end" : ""} ${front ? "[paint-order:stroke_fill] [-webkit-text-stroke:0.07em_var(--color-bh-off)]" : ""}`}>
           {[...word].map((letter, i) => (
             <span key={i} className={front && (i + w) % 2 === 1 ? "text-transparent" : ""}>{letter}</span>
           ))}

@@ -60,12 +60,19 @@ describe("latestChange", () => {
   it("names the item whose score moved most since the last data, with its unit", () => {
     const before = readSnapshot([boardRow("github_trending")], [entry("github_trending", "github", "a/b", "a/b", 100, 0), entry("github_trending", "github", "c/d", "c/d", 50, 0)]);
     const after = readSnapshot([boardRow("github_trending")], [entry("github_trending", "github", "a/b", "a/b", 104, 4), entry("github_trending", "github", "c/d", "c/d", 62, 12)]);
-    expect(latestChange(before, after)).toEqual({ title: "c/d", delta: 12, unit: "stars" });
+    expect(latestChange(before, after, ["github_trending"])).toEqual({ title: "c/d", delta: 12, unit: "stars" });
+  });
+
+  it("only looks at the boards the person follows", () => {
+    const before = readSnapshot([], [entry("v2ex_hot", "v2ex", "9", "off-topic", 10, 0), entry("hn_front", "hn", "1", "a story", 50, 0)]);
+    const after = readSnapshot([], [entry("v2ex_hot", "v2ex", "9", "off-topic", 30, 20), entry("hn_front", "hn", "1", "a story", 52, 2)]);
+    expect(latestChange(before, after, ["hn_front"])).toEqual({ title: "a story", delta: 2, unit: "points" });
+    expect(latestChange(before, after, [])).toBeNull();
   });
 
   it("is null when no score moved", () => {
     const same = readSnapshot([], [entry("hn_front", "hn", "1", "x", 5, 0)]);
-    expect(latestChange(same, same)).toBeNull();
+    expect(latestChange(same, same, ["hn_front"])).toBeNull();
   });
 });
 

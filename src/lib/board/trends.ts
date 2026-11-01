@@ -56,10 +56,13 @@ export function sparkPath(points: Point[], w: number, h: number): string {
 
 const sourceOf = (key: string) => key.slice(0, key.indexOf(":")) as Source;
 
-/** The item whose score moved most between two reads of the boards, for the "last change" line. */
-export function latestChange(before: BoardData, after: BoardData): { title: string; delta: number; unit: string } | null {
+/** The item on a followed board whose score moved most between two reads, for the "last change" line. The worker
+ *  checks every board, so items from boards the person does not follow are left out (a V2EX post turned up there). */
+export function latestChange(before: BoardData, after: BoardData, boards: BoardId[]): { title: string; delta: number; unit: string } | null {
+  const followed = new Set(Object.values(after.entries).filter((e) => boards.includes(e.boardId)).map((e) => e.key));
   let best: { title: string; delta: number; unit: string } | null = null;
   for (const [key, item] of Object.entries(after.items)) {
+    if (!followed.has(key)) continue;
     const old = before.items[key];
     const delta = old ? item.score - old.score : 0;
     if (delta > 0 && (!best || delta > best.delta)) {

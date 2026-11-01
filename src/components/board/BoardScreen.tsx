@@ -39,7 +39,7 @@ export function BoardScreen() {
   const data = load.kind === "ready" ? load.data : null;
   const mine = follows.state.kind === "ready" ? follows.state.follows : [];
   const shown = followedBoards(mine);
-  const trends = useTrends(db, data, data ? shownKeys(data, shown, MOST_ROWS) : []);
+  const trends = useTrends(db, data, data ? shownKeys(data, shown, MOST_ROWS) : [], shown);
 
   if (load.kind === "failed" || follows.state.kind === "failed") return <Message text={LOAD_FAILED} />;
   if (!data || follows.state.kind === "loading") return <Skeleton />;

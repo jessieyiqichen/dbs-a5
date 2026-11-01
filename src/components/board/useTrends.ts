@@ -20,11 +20,16 @@ const scores = (data: BoardData) => Object.fromEntries(Object.entries(data.items
 
 /** The last hour of each shown item's score, read once per set of items and then grown point by point as Realtime
  *  changes arrive; plus the latest change and how many times each board has moved, for the poster to react to. */
-export function useTrends(db: SupabaseClient | null, data: BoardData | null, keys: string[]) {
+export function useTrends(db: SupabaseClient | null, data: BoardData | null, keys: string[], boards: BoardId[]) {
   const [series, setSeries] = useState<Series>({});
   const [last, setLast] = useState<LastChange | null>(null);
   const [turns, setTurns] = useState<Partial<Record<BoardId, number>>>({});
   const previous = useRef<BoardData | null>(null);
+  // Read when data arrives, not a reason to recompute: the followed boards as they are at that moment
+  const boardsRef = useRef(boards);
+  useEffect(() => {
+    boardsRef.current = boards;
+  }, [boards]);
   const keyList = [...keys].sort().join(",");
 
   useEffect(() => {
@@ -46,7 +51,7 @@ export function useTrends(db: SupabaseClient | null, data: BoardData | null, key
     if (!before || !data || before === data) return;
     const at = new Date().toISOString();
     setSeries((s) => addPoints(s, scores(before), scores(data), at));
-    const change = latestChange(before, data);
+    const change = latestChange(before, data, boardsRef.current);
     if (change) setLast({ ...change, at });
     const moved = movedBoards(before, data);
     if (moved.length) setTurns((t) => ({ ...t, ...Object.fromEntries(moved.map((b) => [b, (t[b] ?? 0) + 1])) }));

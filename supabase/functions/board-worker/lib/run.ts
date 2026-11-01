@@ -13,13 +13,12 @@ export interface Store {
   upsertRanks(board: BoardId, items: BoardItem[]): Promise<void>;
   deleteRanks(board: BoardId, keys: string[]): Promise<void>;
   insertHistory(rows: { key: string; score: number }[]): Promise<void>;
-  /** Recomputes the board's "rise in the last hour" and returns how many items it changed. */
-  refreshRise(board: BoardId): Promise<number>;
 }
 
 export interface RunResult {
   fetched: number;
-  /** Rows written: changed items, changed or new ranks, removed ranks, and changed rises. */
+  /** Rows written: changed items, changed or new ranks, removed ranks. An item's rise over the last hour is set by
+   *  the database in the same write as its score (items_set_rise), and refreshed by Cron every five minutes. */
   changed: number;
 }
 
@@ -42,6 +41,5 @@ export async function runBoard(
     diff.removed.length > 0 ? store.deleteRanks(board, diff.removed) : Promise.resolve(),
     diff.scores.length > 0 ? store.insertHistory(diff.scores) : Promise.resolve(),
   ]);
-  const rises = await store.refreshRise(board);
-  return { fetched: fetched.length, changed: diff.items.length + diff.ranks.length + diff.removed.length + rises };
+  return { fetched: fetched.length, changed: diff.items.length + diff.ranks.length + diff.removed.length };
 }

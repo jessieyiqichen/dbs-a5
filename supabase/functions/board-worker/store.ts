@@ -78,10 +78,5 @@ export function supabaseStore(db: SupabaseClient): Store {
       const { error } = await db.from("item_history").insert(history);
       check("item_history", error);
     },
-    async refreshRise(board) {
-      const { data, error } = await db.rpc("refresh_rise", { p_board: board });
-      check("refresh_rise", error);
-      return Number(data ?? 0);
-    },
   };
 }

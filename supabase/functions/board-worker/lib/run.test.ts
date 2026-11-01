@@ -25,7 +25,7 @@ function memoryStore() {
   const items = new Map<string, StoredItem>();
   const ranks = new Map<string, number>();
   const history: { key: string; score: number }[] = [];
-  const rises = new Map<string, number>();
+  // The rise over the last hour is the database's job (a trigger on items), so the store knows nothing of it
   const store: Store = {
     loadItems: async (keys) => new Map(keys.filter((k) => items.has(k)).map((k) => [k, items.get(k)!])),
     loadRanks: async () => new Map(ranks),
@@ -33,18 +33,8 @@ function memoryStore() {
     upsertRanks: async (_b, rows) => rows.forEach((r) => ranks.set(itemKey(r), r.rank)),
     deleteRanks: async (_b, keys) => keys.forEach((k) => ranks.delete(k)),
     insertHistory: async (rows) => void history.push(...rows),
-    refreshRise: async () => {
-      let changed = 0;
-      for (const key of ranks.keys()) {
-        const first = history.find((h) => h.key === key)?.score ?? 0;
-        const rise = (items.get(key)?.score ?? 0) - first;
-        if ((rises.get(key) ?? 0) !== rise) changed += 1;
-        rises.set(key, rise);
-      }
-      return changed;
-    },
   };
-  return { store, items, ranks, history, rises };
+  return { store, items, ranks, history };
 }
 
 describe("runBoard on the saved Hacker News front page", () => {
@@ -64,14 +54,14 @@ describe("runBoard on the saved Hacker News front page", () => {
     expect(db.history).toHaveLength(30);
   });
 
-  it("writes only the story whose points went up, with one history row and its new rise", async () => {
+  it("writes only the story whose points went up, as one row, with one history row", async () => {
     const db = memoryStore();
     await runBoard("hn_front", () => fetchBoard("hn_front", { fetch: hnFetch() }), db.store);
     const later = await runBoard("hn_front", () => fetchBoard("hn_front", { fetch: hnFetch(8) }), db.store);
-    expect(later.changed).toBe(2); // the item, and its rise
+    expect(later.changed).toBe(1);
     expect(db.history).toHaveLength(31);
     const firstKey = [...db.ranks.entries()].find(([, rank]) => rank === 1)![0];
-    expect(db.rises.get(firstKey)).toBe(8);
+    expect(db.items.get(firstKey)?.score).toBe(db.history[0].score + 8);
   });
 
   it("fails and writes nothing when the site answers with no rows", async () => {

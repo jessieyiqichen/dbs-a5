@@ -5,11 +5,11 @@ import { SCORE_UNIT, STATE_NOTE } from "@/lib/board/copy";
 import { itemKeywords } from "@/lib/board/follows";
 import { ageLabel, type Freshness } from "@/lib/board/freshness";
 import type { BoardRow } from "@/lib/board/live";
-import { BOARD_DOMAIN, BOARD_LOOK, TILE_CLASS } from "@/lib/board/look";
+import { BOARD_DOMAIN } from "@/lib/board/look";
 import type { Point } from "@/lib/board/trends";
 import type { Board } from "@/lib/board/types";
 import { VIEWS, type View } from "@/lib/board/views";
-import { Shape } from "./art/Shape";
+import { BoardIcon } from "./art/BoardIcon";
 import { RaceView } from "./RaceView";
 import { Sparkline } from "./Sparkline";
 import { TilesView } from "./TilesView";
@@ -48,7 +48,6 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 /** One leaderboard as a browser window on poster paper (after Aleksandar Savić's windows, docs/references.md): the
  *  site in its title bar, its shape and state, its pulse, then its rows, each with the last hour drawn in. */
 export function BoardPanel({ board, state, rows, keywords, series, now, pulse, starKey, view, onView }: Props) {
-  const look = BOARD_LOOK[board.id];
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
   return (
@@ -58,9 +57,11 @@ export function BoardPanel({ board, state, rows, keywords, series, now, pulse, s
         <span className="ml-2 truncate">{BOARD_DOMAIN[board.id]}</span>
       </div>
       <header className={`flex flex-wrap items-center gap-3 border-b-2 border-bh-navy px-4 py-3 ${quiet ? "bh-hatched" : ""}`}>
-        <span className={`grid size-9 shrink-0 place-items-center overflow-hidden ${TILE_CLASS[quiet ? "off" : look.tile]} ${quiet ? "border border-dashed border-bh-navy" : ""}`}>
-          {!quiet && <Shape shape={look.shape} color={look.color} size={36} />}
-        </span>
+        {quiet ? (
+          <span aria-hidden className="block size-9 shrink-0 border border-dashed border-bh-navy bg-bh-off" />
+        ) : (
+          <BoardIcon board={board.id} size={36} className="block size-9 shrink-0 border-2 border-bh-navy" />
+        )}
         <h3 id={`board-${board.id}`} className="flex-1 text-xl font-extrabold tracking-[-0.02em]">{board.name}</h3>
         <ViewPicker view={view} onView={onView} />
         <p className="font-bh-mono text-[11px]" aria-live="polite">

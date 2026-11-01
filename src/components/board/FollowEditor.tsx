@@ -3,9 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { BOARD_BLURB, KEYWORD_INVALID } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, cleanKeyword } from "@/lib/board/follows";
-import { BOARD_LOOK, TILE_CLASS } from "@/lib/board/look";
 import { BOARD_IDS, type BoardId, type Board, type Follow } from "@/lib/board/types";
-import { Shape } from "./art/Shape";
+import { BoardIcon } from "./art/BoardIcon";
 
 interface Props {
   boards: Record<string, Board>;
@@ -52,7 +51,6 @@ export function FollowEditor({ boards, follows, counts, onAdd, onRemove }: Props
 }
 
 function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string; on: boolean; busy: boolean; onToggle: () => void }) {
-  const look = BOARD_LOOK[id];
   return (
     <button
       type="button"
@@ -62,9 +60,7 @@ function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string;
       className={`bh-keycap flex h-full w-full items-start gap-3 border-2 border-bh-navy p-3 text-left focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy ${on ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"} ${busy ? "opacity-70" : ""}`}
     >
       {/* An ink frame keeps the icon apart from the key, whose pressed mustard is some icons' own tile colour */}
-      <span aria-hidden className={`block size-11 shrink-0 overflow-hidden border-2 border-bh-navy ${TILE_CLASS[look.tile]}`}>
-        <Shape shape={look.shape} color={look.color} size={44} />
-      </span>
+      <BoardIcon board={id} size={44} className="block size-11 shrink-0 border-2 border-bh-navy" />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="font-extrabold leading-tight">{name}</span>
         <span className="text-sm leading-snug">{BOARD_BLURB[id]}</span>

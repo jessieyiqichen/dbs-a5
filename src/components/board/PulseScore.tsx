@@ -3,7 +3,7 @@
 import { BOARD_LOOK, LETTER_COLORS } from "@/lib/board/look";
 import type { PulseMark } from "@/lib/board/trends";
 import type { BoardId } from "@/lib/board/types";
-import { Shape } from "./art/Shape";
+import { BoardIcon } from "./art/BoardIcon";
 
 /** The last hour as a score: one stave per board, one column per minute, a note where the board changed (bigger for
  *  more changes). Each board's rhythm can be read at a glance; the newest column is on the right. The counts are
@@ -19,7 +19,7 @@ export function PulseScore({ marks, boards }: { marks: PulseMark[]; boards: Boar
         {boards.map((board, i) => (
           <div key={board} className="grid grid-cols-[7.5rem_minmax(0,1fr)_2.5rem] items-center gap-3">
             <span className="flex items-center gap-2 truncate font-bh-mono text-[11px]">
-              <Shape shape={BOARD_LOOK[board].shape} color="off" size={12} />
+              <BoardIcon board={board} size={14} className="block size-3.5 shrink-0 border border-bh-off" />
               {BOARD_LOOK[board].short}
             </span>
             <Stave marks={marks} board={board} color={LETTER_COLORS[i % LETTER_COLORS.length]} />

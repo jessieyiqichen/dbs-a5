@@ -1,4 +1,4 @@
-/* Clerk's sign-in styles go in their own layer, under Tailwind's utilities, so Fish Treat classes win (lib/auth/appearance.ts) */
+/* Clerk's sign-in styles go in their own layer, under Tailwind's utilities, so the board's classes win (lib/board/clerkAppearance.ts) */
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
 

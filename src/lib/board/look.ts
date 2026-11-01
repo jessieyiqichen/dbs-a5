@@ -2,16 +2,17 @@ import type { BoardId, Source } from "./types";
 
 // Each board's colours and shape, in the muted Bauhaus set of Stripe's Dublin Hackathon posters (studied 2026-10-31):
 // a shape in one colour on a tile of another. Text on a tile uses the colour that passes on it (globals.css).
+// No board uses mustard: it is the colour of a pressed key, a chosen tab and a number that just changed (user, 2026-10-31).
 export type BlockColor = "red" | "cobalt" | "mustard" | "green" | "navy" | "off";
 export type Shape = "quarter" | "half" | "square" | "circle" | "triangle" | "arch";
 
 export const BOARD_LOOK: Record<BoardId, { color: BlockColor; tile: BlockColor; shape: Shape; short: string }> = {
-  hn_front: { color: "red", tile: "mustard", shape: "quarter", short: "HN" },
+  hn_front: { color: "red", tile: "off", shape: "quarter", short: "HN" },
   hn_show: { color: "off", tile: "red", shape: "half", short: "Show HN" },
   github_trending: { color: "cobalt", tile: "off", shape: "square", short: "GitHub" },
   hf_models: { color: "off", tile: "green", shape: "circle", short: "HF models" },
   hf_papers: { color: "off", tile: "cobalt", shape: "triangle", short: "Papers" },
-  producthunt: { color: "mustard", tile: "navy", shape: "arch", short: "Product Hunt" },
+  producthunt: { color: "red", tile: "navy", shape: "arch", short: "Product Hunt" },
 };
 
 /** Where each board lives, for the title bar of its window. */

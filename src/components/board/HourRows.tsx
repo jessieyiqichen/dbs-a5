@@ -61,7 +61,7 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
   const unit = SCORE_UNIT[boardId];
   const matched = itemKeywords(item, keywords);
   const before = item.score - item.rise;
-  // Sat still all hour: its number alone, and a grey line
+  // Sat still all hour: a grey line
   const still = row.points.length === 0 && item.rise === 0;
   const changes = useChangeCount(item.score);
   return (
@@ -84,22 +84,22 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="line-clamp-2 font-bold leading-tight underline-offset-4 hover:underline">
           {item.title}
         </a>
-        <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 font-bh-mono text-[11px] text-bh-muted">
-          <span>
-            {still ? `${number.format(item.score)} ${unit}` : `${number.format(before)} → ${number.format(item.score)} ${unit}`}
-          </span>
-          {showBoard && <span className="border border-bh-navy px-1 text-bh-navy">#{row.rank}</span>}
-          {matched.map((k) => <span key={k} className="border border-bh-cobalt px-1 text-bh-cobalt">{k}</span>)}
-        </p>
+        {(showBoard || matched.length > 0) && (
+          <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 font-bh-mono text-[11px] text-bh-muted">
+            {showBoard && <span className="border border-bh-navy px-1 text-bh-navy">#{row.rank}</span>}
+            {matched.map((k) => <span key={k} className="border border-bh-cobalt px-1 text-bh-cobalt">{k}</span>)}
+          </p>
+        )}
       </div>
       <button type="button" onClick={onOpen} aria-label={`The last hour of ${item.title}`} className={`col-span-3 min-h-11 border-2 border-transparent hover:border-bh-navy focus-visible:outline-3 focus-visible:outline-bh-navy sm:col-span-1 ${still ? "text-bh-muted" : "text-bh-navy"}`}>
         <StepLine points={row.points} before={before} now={now} />
       </button>
+      {/* The number itself, as a leaderboard shows it (the user, 2026-11-01); the line beside it is the hour's change */}
       <p className="row-start-1 col-start-3 text-right sm:col-start-4">
-        <span key={changes} className={`block font-bh-condensed text-3xl leading-none font-black tabular-nums ${item.rise <= 0 ? "text-bh-muted" : ""} ${changes ? "bh-flash" : ""}`}>
-          {item.rise > 0 ? "+" : ""}{number.format(item.rise)}
+        <span key={changes} className={`block font-bh-condensed text-3xl leading-none font-black tabular-nums ${changes ? "bh-flash" : ""}`}>
+          {number.format(item.score)}
         </span>
-        <span className="block font-bh-mono text-[10px] text-bh-muted">this hour</span>
+        <span className="block font-bh-mono text-[10px] text-bh-muted">{unit}</span>
       </p>
     </li>
   );

@@ -7,19 +7,18 @@ import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@
 import { freshness } from "@/lib/board/freshness";
 import { shownKeys } from "@/lib/board/live";
 import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
-import { boardRises, boardWeights, pulse, type Series } from "@/lib/board/trends";
+import { boardRises, boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
 import { BoardPanel } from "./BoardPanel";
 import { BoardTabs, panelId, tabId } from "./BoardTabs";
 import { FollowEditor } from "./FollowEditor";
 import { LetterHeading } from "./LetterHeading";
 import { PosterHero } from "./PosterHero";
-import { PulseScore } from "./PulseScore";
-import { RisingTab, boardOfItems } from "./RisingTab";
+import { RisingTab } from "./RisingTab";
 import { useFollows } from "./useFollows";
 import { useBoardDb, useBoardLive, useNow } from "./useBoardLive";
 import { usePersisted } from "./usePersisted";
-import { TREND_MINUTES, useTrends } from "./useTrends";
+import { useTrends } from "./useTrends";
 
 /** How many of a board's rows (by rank and by rise) get their hour read: the whole board, so every change has a line. */
 const ROWS_WITH_HISTORY = 50;
@@ -102,7 +101,7 @@ interface OneBoardProps {
   now: Date;
 }
 
-/** One board in its window, with its own pulse above its ranking. */
+/** One board in its window: its ranking, each row with its own hour. */
 function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
   const board = data.boards[id];
   if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
@@ -113,7 +112,6 @@ function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
       rows={rankedRows(data, id, series)}
       keywords={keywords}
       now={now}
-      pulse={<PulseScore marks={pulse(series, boardOfItems(data, [id]), now, TREND_MINUTES)} boards={[id]} />}
     />
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import type { HourRow } from "@/lib/board/changes";
 import { STATE_NOTE } from "@/lib/board/copy";
 import { ageLabel, type Freshness } from "@/lib/board/freshness";
@@ -16,8 +15,6 @@ interface Props {
   rows: HourRow[];
   keywords: string[];
   now: Date;
-  /** Shown between the header and the rows: the board's own pulse. */
-  pulse?: ReactNode;
 }
 
 /** What the header says about a board's last check, in each of the four states (docs/data-flow.md). */
@@ -30,8 +27,8 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 }
 
 /** One leaderboard as a browser window on poster paper (after Aleksandar Savić's windows, docs/references.md): the
- *  site in its title bar, its sign and state, its pulse, then its ranking, each row with its own hour. */
-export function BoardPanel({ board, state, rows, keywords, now, pulse }: Props) {
+ *  site in its title bar, its sign and state, then its ranking, each row with its own hour. */
+export function BoardPanel({ board, state, rows, keywords, now }: Props) {
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
   return (
@@ -58,7 +55,6 @@ export function BoardPanel({ board, state, rows, keywords, now, pulse }: Props) 
           {state === "down" && board.lastError && <span className="mt-0.5 block font-bh-mono text-[11px] font-normal">{board.lastError}</span>}
         </p>
       )}
-      {pulse}
       {state === "loading" && rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">Nothing yet.</p>
       ) : (

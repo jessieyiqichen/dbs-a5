@@ -50,7 +50,7 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
             className={`bh-keycap relative flex min-h-11 items-center gap-2 border-2 border-bh-navy px-3 font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy ${selected ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"}`}
           >
             {tab === RISING_TAB ? <span aria-hidden className="text-bh-red">▲</span> : <BoardIcon board={tab} size={20} className="block size-5 shrink-0 border-[1.5px] border-bh-navy" />}
-            {tab === RISING_TAB ? "Rising now" : BOARD_LOOK[tab].short}
+            {tab === RISING_TAB ? "All changes" : BOARD_LOOK[tab].short}
             {count > 0 && (
               <span className="absolute -top-2.5 -right-2.5 grid min-w-6 place-items-center bg-bh-navy px-1 font-bh-mono text-[11px] text-bh-off">
                 {count}

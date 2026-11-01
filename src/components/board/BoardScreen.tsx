@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { changeRows } from "@/lib/board/changes";
 import { LOAD_FAILED, SAVE_FAILED, SCORE_UNIT } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
-import { boardRows, risingNow, shownKeys } from "@/lib/board/live";
+import { shownKeys } from "@/lib/board/live";
 import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
 import { boardRises, boardWeights, pulse, type Series } from "@/lib/board/trends";
-import type { BoardData, BoardId, Follow } from "@/lib/board/types";
-import { VIEWS, type View } from "@/lib/board/views";
-import { BoardPanel, VIEW_ROWS } from "./BoardPanel";
+import type { BoardData, BoardId } from "@/lib/board/types";
+import { BoardPanel } from "./BoardPanel";
 import { BoardTabs, panelId, tabId } from "./BoardTabs";
 import { FollowEditor } from "./FollowEditor";
 import { LetterHeading } from "./LetterHeading";
@@ -18,14 +18,14 @@ import { PulseScore } from "./PulseScore";
 import { RisingTab, boardOfItems } from "./RisingTab";
 import { useFollows } from "./useFollows";
 import { useBoardDb, useBoardLive, useNow } from "./useBoardLive";
+import { useLookedAt } from "./useLookedAt";
 import { usePersisted } from "./usePersisted";
 import { TREND_MINUTES, useTrends } from "./useTrends";
 
-/** The most rows any view shows, so every view has its trend lines ready. */
-const MOST_ROWS = Math.max(...Object.values(VIEW_ROWS));
-const readView = (stored: string | null): View => VIEWS.find((v) => v === stored) ?? "race";
+/** How many of a board's rows (by rank and by rise) get their hour read: the whole board, so every change has a line. */
+const ROWS_WITH_HISTORY = 50;
 
-/** Builder's Board: a poster banner the data draws, then a tab per followed board and one for what is rising
+/** Builder's Board: a poster banner the data draws, then a tab per followed board and one for all changes
  *  (user, 2026-10-31: the boards were at the bottom of a long page). */
 export function BoardScreen() {
   const db = useBoardDb();
@@ -33,20 +33,20 @@ export function BoardScreen() {
   const follows = useFollows(db);
   const now = useNow();
   const [editing, setEditing] = useState(false);
-  const [view, setView] = usePersisted<View>("bb-view-2", readView);
   const [remembered, setRemembered] = usePersisted<string>("bb-tab", (s) => s ?? "");
   const [seen, setSeen] = useState<Moves>({});
 
   const data = load.kind === "ready" ? load.data : null;
   const mine = follows.state.kind === "ready" ? follows.state.follows : [];
   const shown = followedBoards(mine);
-  const trends = useTrends(db, data, data ? shownKeys(data, shown, MOST_ROWS) : [], shown);
+  const trends = useTrends(db, data, data ? shownKeys(data, shown, ROWS_WITH_HISTORY) : [], shown);
 
   if (load.kind === "failed" || follows.state.kind === "failed") return <Message text={LOAD_FAILED} />;
   if (!data || follows.state.kind === "loading") return <Skeleton />;
   const tabs = tabsFor(shown);
   const open = pickTab(tabs, remembered);
   const choosing = editing || shown.length === 0;
+  const keywords = keywordsIn(mine);
   const onOpen = (tab: Tab) => {
     setSeen((s) => markSeen(markSeen(s, trends.turns, open), trends.turns, tab));
     setRemembered(tab);
@@ -78,15 +78,16 @@ export function BoardScreen() {
               </div>
             </LetterHeading>
             <div className="border-2 border-t-0 border-bh-navy bg-bh-off p-5">
-              <FollowEditor boards={data.boards} follows={mine} counts={keywordCounts(data, shown, [...keywordsIn(mine), ...SUGGESTED_KEYWORDS])} onAdd={follows.add} onRemove={follows.remove} />
+              <FollowEditor boards={data.boards} follows={mine} counts={keywordCounts(data, shown, [...keywords, ...SUGGESTED_KEYWORDS])} onAdd={follows.add} onRemove={follows.remove} />
             </div>
           </section>
         ) : (
-          <div role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
+          // Keyed by tab: each tab remembers on its own when it was last marked seen
+          <div key={open} role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
             {open === RISING_TAB ? (
-              <RisingTab data={data} boards={shown} series={trends.series} now={now} />
+              <RisingTab data={data} boards={shown} keywords={keywords} series={trends.series} now={now} />
             ) : (
-              <OneBoard data={data} id={open} follows={mine} series={trends.series} now={now} view={view} onView={setView} />
+              <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} />
             )}
           </div>
         )}
@@ -98,28 +99,25 @@ export function BoardScreen() {
 interface OneBoardProps {
   data: BoardData;
   id: BoardId;
-  follows: Follow[];
+  keywords: string[];
   series: Series;
   now: Date;
-  view: View;
-  onView: (view: View) => void;
 }
 
-/** One board in its window, with its own pulse above its rows and its fastest riser starred. */
-function OneBoard({ data, id, follows, series, now, view, onView }: OneBoardProps) {
+/** One board in its window, with its own pulse above what changed on it. */
+function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
+  const [lookedAt, mark] = useLookedAt(id);
   const board = data.boards[id];
   if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
   return (
     <BoardPanel
       board={board}
       state={freshness(board, now)}
-      rows={boardRows(data, id, view === "tiles" ? "rising" : "rank", VIEW_ROWS[view])}
-      keywords={keywordsIn(follows)}
-      series={series}
+      changes={changeRows(data, [id], series, lookedAt)}
+      keywords={keywords}
       now={now}
-      starKey={risingNow(data, [id])[0]?.item.key}
-      view={view}
-      onView={onView}
+      lookedAt={lookedAt}
+      onLooked={mark}
       pulse={<PulseScore marks={pulse(series, boardOfItems(data, [id]), now, TREND_MINUTES)} boards={[id]} />}
     />
   );

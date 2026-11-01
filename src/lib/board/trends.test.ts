@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addPoints, boardRises, boardWeights, latestChange, movedBoards, pulse, sparkPath, stepPath, type Series } from "./trends";
+import { addPoints, boardRises, boardWeights, latestChange, movedBoards, pulse, lastStep, sparkPath, stepLine, type Series } from "./trends";
 import { readSnapshot } from "./rows";
 
 const now = new Date("2026-10-31T20:35:00Z");
@@ -107,22 +107,37 @@ describe("movedBoards", () => {
   });
 });
 
-describe("stepPath", () => {
+describe("stepLine", () => {
   const now = new Date("2026-10-31T20:35:00Z").getTime();
   const at2 = (minutesAgo: number) => new Date(now - minutesAgo * 60_000).toISOString();
-  // The last hour across, and a shared height: the biggest gain among the rows shown is the full height
-  const frame = { from: now - 60 * 60_000, to: now, base: 100, span: 20 };
+  const [from, to] = [now - 60 * 60_000, now];
 
-  it("holds each level from its time to the next, measured from the score an hour ago, on a shared scale", () => {
-    const path = stepPath([{ at: at2(30), score: 110 }, { at: at2(15), score: 120 }], 100, 20, frame);
-    expect(path).toBe("M0.0 20.0H50.0V10.0H75.0V0.0H100.0V20.0Z");
+  it("holds each level from its time to the next, on the item's own scale: lowest at the bottom, highest at the top", () => {
+    const line = stepLine([{ at: at2(60), score: 100 }, { at: at2(30), score: 110 }, { at: at2(15), score: 120 }], 100, 20, from, to);
+    expect(line).toBe("M0.0 20.0H50.0V10.0H75.0V0.0H100.0");
   });
 
-  it("is only a baseline when nothing changed in the hour", () => {
-    expect(stepPath([], 100, 20, frame)).toBe("M0.0 20.0H100.0V20.0Z");
+  it("is a level line through the middle when every reading is the same, and nothing when there are none", () => {
+    expect(stepLine([{ at: at2(30), score: 7 }], 100, 20, from, to)).toBe("M0.0 10.0H100.0");
+    expect(stepLine([], 100, 20, from, to)).toBe("");
   });
 
-  it("keeps a step inside the box when a score passes the shared top or a point is older than the hour", () => {
-    expect(stepPath([{ at: at2(90), score: 105 }, { at: at2(30), score: 200 }], 100, 20, frame)).toBe("M0.0 20.0V15.0H50.0V0.0H100.0V20.0Z");
+  it("keeps a point older than the hour at the left edge", () => {
+    expect(stepLine([{ at: at2(90), score: 105 }, { at: at2(30), score: 200 }], 100, 20, from, to)).toBe("M0.0 20.0H50.0V0.0H100.0");
+  });
+});
+
+describe("lastStep", () => {
+  const now = new Date("2026-10-31T20:35:00Z").getTime();
+  const at2 = (minutesAgo: number) => new Date(now - minutesAgo * 60_000).toISOString();
+  const [from, to] = [now - 60 * 60_000, now];
+
+  it("is the step from the point before the last to the right edge, on the whole line's scale, ending where the line ends", () => {
+    const points = [{ at: at2(60), score: 100 }, { at: at2(30), score: 110 }, { at: at2(15), score: 120 }];
+    expect(lastStep(points, 100, 20, from, to)).toEqual({ d: "M50.0 10.0H75.0V0.0H100.0", endY: 0 });
+  });
+
+  it("is no step for a single point, just its level", () => {
+    expect(lastStep([{ at: at2(30), score: 7 }], 100, 20, from, to)).toEqual({ d: "", endY: 10 });
   });
 });

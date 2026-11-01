@@ -54,31 +54,46 @@ export function sparkPath(points: Point[], w: number, h: number): string {
   return points.map((p, i) => `${i ? "L" : "M"}${x(times[i]).toFixed(1)} ${y(p.score).toFixed(1)}`).join(" ");
 }
 
-/** The frame a step chart is drawn in: `from`..`to` across (ms, the last hour), and `base`..`base + span` up (the
- *  score an hour ago, and the biggest gain among the rows shown), so rows side by side can be compared. */
-export interface StepFrame {
-  from: number;
-  to: number;
-  base: number;
-  span: number;
-}
-
-/** An item's last hour as a filled block that holds each score until it changes, then steps up: no diagonals (the
- *  user found the sloped lines ugly, 2026-10-31). Nothing changed: only the baseline. Out-of-frame values are clamped. */
-export function stepPath(points: Point[], w: number, h: number, f: StepFrame): string {
-  const clamp = (v: number) => Math.min(Math.max(v, 0), 1);
-  const x = (at: string) => (clamp((new Date(at).getTime() - f.from) / Math.max(f.to - f.from, 1)) * w).toFixed(1);
-  const y = (score: number) => (h - clamp((score - f.base) / Math.max(f.span, 1)) * h).toFixed(1);
-  let d = `M0.0 ${h.toFixed(1)}`;
-  let [lastX, lastY] = ["0.0", h.toFixed(1)];
+/** An item's last hour as a line that holds each score until it changes, then steps: no diagonals (the user found
+ *  sloped lines ugly, 2026-10-31). `from`..`to` is the hour across; up is the item's own range, lowest score at the
+ *  bottom and highest at the top (the user wants each item's own change, not a comparison, 2026-11-01). The line
+ *  starts at the first point's level and runs to the right edge. No points: an empty path. */
+export function stepLine(points: Point[], w: number, h: number, from: number, to: number): string {
+  if (points.length === 0) return "";
+  const { x, y } = stepScales(points, w, h, from, to);
+  let d = `M0.0 ${y(points[0].score)}`;
+  let [lastX, lastY] = ["0.0", y(points[0].score)];
+  // A point at the same level adds nothing: the line already runs on to the next step
   for (const point of points) {
     const [px, py] = [x(point.at), y(point.score)];
-    if (px !== lastX) d += `H${px}`;
-    if (py !== lastY) d += `V${py}`;
+    if (py === lastY) continue;
+    d += `H${px}V${py}`;
     [lastX, lastY] = [px, py];
   }
   if (lastX !== w.toFixed(1)) d += `H${w.toFixed(1)}`;
-  return `${d}V${h.toFixed(1)}Z`;
+  return d;
+}
+
+/** The latest step of the same line (from the point before the last to the right edge), to draw over it in another
+ *  colour, and where the line ends. Fewer than two points: no step, the line's level. */
+export function lastStep(points: Point[], w: number, h: number, from: number, to: number): { d: string; endY: number } {
+  if (points.length === 0) return { d: "", endY: h / 2 };
+  const { x, y } = stepScales(points, w, h, from, to);
+  const [prev, last] = [points[points.length - 2], points[points.length - 1]];
+  const endY = Number(y(last.score));
+  if (!prev) return { d: "", endY };
+  return { d: `M${x(prev.at)} ${y(prev.score)}H${x(last.at)}V${y(last.score)}H${w.toFixed(1)}`, endY };
+}
+
+/** Time across the hour and score up the item's own range, both to a tenth. */
+function stepScales(points: Point[], w: number, h: number, from: number, to: number) {
+  const scores = points.map((p) => p.score);
+  const [low, high] = [Math.min(...scores), Math.max(...scores)];
+  const clamp = (v: number) => Math.min(Math.max(v, 0), 1);
+  return {
+    x: (at: string) => (clamp((new Date(at).getTime() - from) / Math.max(to - from, 1)) * w).toFixed(1),
+    y: (score: number) => (high === low ? h / 2 : h - ((score - low) / (high - low)) * h).toFixed(1),
+  };
 }
 
 const sourceOf = (key: string) => key.slice(0, key.indexOf(":")) as Source;

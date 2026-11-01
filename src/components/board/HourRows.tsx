@@ -65,7 +65,8 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
   const still = row.points.length === 0 && item.rise === 0;
   const changes = useChangeCount(item.score);
   return (
-    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_5rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_5rem]">
+    // The number's column sizes to its widest value (GitHub stars run to six digits), never under the line
+    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_auto]">
       {/* A board's own tab is a ranking: just the rank. The feed across boards: when, then which board */}
       <p className="font-bh-mono text-[11px] leading-snug">
         {showBoard ? (
@@ -94,7 +95,7 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
         <StepLine points={row.points} before={before} now={now} />
       </button>
       {/* The number itself, as a leaderboard shows it (the user, 2026-11-01); the line beside it is the hour's change */}
-      <p className="row-start-1 col-start-3 text-right sm:col-start-4">
+      <p className="row-start-1 col-start-3 min-w-16 text-right sm:col-start-4">
         <span key={changes} className={`block font-bh-condensed text-3xl leading-none font-black tabular-nums ${changes ? "bh-flash" : ""}`}>
           {number.format(item.score)}
         </span>

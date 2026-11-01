@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { rankedRows } from "@/lib/board/changes";
 import { LOAD_FAILED, SAVE_FAILED } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
@@ -38,12 +38,9 @@ export function BoardScreen() {
   const mine = follows.state.kind === "ready" ? follows.state.follows : [];
   const shown = followedBoards(mine);
   const trends = useTrends(db, data, data ? shownKeys(data, shown, ROWS_WITH_HISTORY) : [], shown);
-  // Nothing followed yet: the chooser is open as if the person opened it, so their first pick does not close it
-  // (seen on the live site, 2026-11-01); Done closes it
-  const nothingFollowed = follows.state.kind === "ready" && shown.length === 0;
-  useEffect(() => {
-    if (nothingFollowed) setEditing(true);
-  }, [nothingFollowed]);
+  // Nothing followed yet: the chooser counts as opened by the person, so their first pick does not close it (seen on
+  // the live site, 2026-11-01); Done closes it. Set during render, as React does for state that follows props.
+  if (follows.state.kind === "ready" && shown.length === 0 && !editing) setEditing(true);
 
   if (load.kind === "failed" || follows.state.kind === "failed") return <Message text={LOAD_FAILED} />;
   if (!data || follows.state.kind === "loading") return <Skeleton />;

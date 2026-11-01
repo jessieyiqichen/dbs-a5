@@ -12,6 +12,7 @@ import { VIEWS, type View } from "@/lib/board/views";
 import { BoardPanel, VIEW_ROWS } from "./BoardPanel";
 import { BoardTabs, panelId, tabId } from "./BoardTabs";
 import { FollowEditor } from "./FollowEditor";
+import { LetterHeading } from "./LetterHeading";
 import { PosterHero } from "./PosterHero";
 import { PulseScore } from "./PulseScore";
 import { RisingTab, boardOfItems } from "./RisingTab";
@@ -65,9 +66,14 @@ export function BoardScreen() {
         </div>
         {follows.saveFailed && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
         {choosing ? (
-          <div className="border-2 border-bh-navy bg-bh-off p-5">
-            <FollowEditor boards={data.boards} follows={mine} onAdd={follows.add} onRemove={follows.remove} />
-          </div>
+          <section aria-labelledby="follow-heading">
+            <LetterHeading id="follow-heading" label="Choose what to follow" lines={["CHOOSE", "WHAT TO", "FOLLOW"]}>
+              <p className="max-w-xs font-bh-mono text-[11px] text-bh-off">Saved to your account. Only you see your choices.</p>
+            </LetterHeading>
+            <div className="border-2 border-t-0 border-bh-navy bg-bh-off p-5">
+              <FollowEditor boards={data.boards} follows={mine} onAdd={follows.add} onRemove={follows.remove} />
+            </div>
+          </section>
         ) : (
           <div role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
             {open === RISING_TAB ? (

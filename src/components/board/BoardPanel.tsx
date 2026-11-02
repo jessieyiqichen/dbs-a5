@@ -52,17 +52,20 @@ export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleS
           <span aria-hidden className={`mr-1.5 inline-block size-2 ${state === "fresh" ? "rounded-full bg-bh-cobalt" : state === "down" ? "bg-bh-red" : "bg-bh-muted"}`} />
           {stateLine(state, board, now)}
         </p>
-        {/* A pressed key: this board is followed. Press it to let the board go; "+" beside the tabs brings it back */}
+        {/* A switch, on: this board is followed (user, 2026-11-01: a state, not a key to press). Flip it to let the
+            board go; "+" beside the tabs brings it back. Pointing at it slides the knob over, a preview of off */}
         <button
           type="button"
-          aria-pressed
-          aria-label={`Following ${board.name}. Press to stop following it`}
+          role="switch"
+          aria-checked
+          aria-label={`Following ${board.name}`}
           onClick={onUnfollow}
-          className="group bh-keycap min-h-9 border-2 border-bh-navy bg-bh-mustard px-2 font-bh-mono text-[11px] font-bold hover:bg-bh-off focus-visible:bg-bh-off focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy"
+          className="group flex min-h-11 items-center gap-2 font-bh-mono text-[11px] font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy"
         >
-          {/* Reads as a state until pointed at, then says what pressing does (user, 2026-11-01: "how do I unfollow this one?") */}
-          <span aria-hidden className="group-hover:hidden group-focus-visible:hidden">Following</span>
-          <span aria-hidden className="hidden group-hover:inline group-focus-visible:inline">Unfollow</span>
+          <span aria-hidden>Following</span>
+          <span aria-hidden className="relative block h-5 w-10 border-2 border-bh-navy bg-bh-mustard transition-colors duration-150 group-hover:bg-bh-off group-focus-visible:bg-bh-off motion-reduce:transition-none">
+            <span className="absolute inset-y-0 right-0 w-1/2 bg-bh-navy transition-transform duration-150 ease-out group-hover:-translate-x-full group-focus-visible:-translate-x-full motion-reduce:transition-none" />
+          </span>
         </button>
       </header>
       {note && (

@@ -39,8 +39,9 @@ flowchart LR
 |---|---|
 | Poster banner | A mosaic the data draws: the board that rose most this hour takes the stage and the title weaves through its shape; a shape turns when its board moves |
 | Tabs | One per followed board, then All changes. A closed tab shows how many times its board moved while you were on another |
-| A board | Its ranking, as a browser window. Each row: rank, title, the source's one-line description, a step line of that item's own last hour on its own scale (the latest step in red), and its score. A row slides to its new place when its rank changes; the score flashes when it moves |
+| A board | Its ranking, as a browser window. Each row: rank, title, the source's one-line description, a step line of that item's own last hour on its own scale (the latest step in red), its score, and a square to save it. A row slides to its new place when its rank changes; the score flashes when it moves |
 | All changes | Every followed board's changes this hour in one feed, latest first, with the pulse: one note per change, minute by minute, per board |
+| Saved | The items you pressed the square on, newest first, from any board. An item stays after it leaves its board, with "off the board" in place of its rank, and its score keeps moving with Realtime like any other |
 | Choose what to follow | Boards as keycaps that stay pressed while followed; keywords that pick out matching rows with a count of how many they match now. Saved to your account, seen only by you |
 
 ## Live, stale, down
@@ -68,12 +69,12 @@ Most of the traffic was the "rise in the last hour" column: a score change was t
 
 - **Keys:** the browser has only the Supabase publishable key and the Clerk publishable key (`NEXT_PUBLIC_…` in `.env.local`, git-ignored, and in Vercel). The worker writes with the project's secret key, which Supabase gives the function on its own servers; the Product Hunt token is a Supabase secret. Neither is in code or in this repo.
 - **The worker needs no key from its caller** (`verify_jwt` off): calling it more often than Cron cannot make it fetch more, because `claim_next_board` only hands out a board that is due, and `boards`, `items` and the rest are not writable by signed-in users at all.
-- **Row-level security:** signed-in people read the boards and the items; `follows` has four rules that compare `user_id` with the token's `sub`, so each person reads and changes only their own follows, and `user_id` is filled in by the database, never sent by the browser. `item_history` and `runs` are readable but never pushed (they are not in the Realtime publication).
+- **Row-level security:** signed-in people read the boards and the items; `follows` and `saves` have rules that compare `user_id` with the token's `sub`, so each person reads and changes only their own follows and saved items, and `user_id` is filled in by the database, never sent by the browser. `item_history` and `runs` are readable but never pushed (they are not in the Realtime publication).
 - **Checked input:** every row from a site and every row from Supabase is checked before use; a bad row is dropped and counted, never shown.
 
 ## Testing
 
-- **398 unit tests** (vitest, `npm test`): 26 for the worker (parsers on saved responses from each site, the diff, a run on an in-memory store, the Product Hunt query asks for VOTES order), 74 for the page's logic (reading and checking rows, applying Realtime changes, freshness, follows and keyword matching, trends and step lines, tabs, the poster mosaic), the rest from Assignment 4. External calls are always faked.
+- **410 unit tests** (vitest, `npm test`): 27 for the worker (parsers on saved responses from each site, the diff, a run on an in-memory store, the Product Hunt query asks for VOTES order and starts its day at Los Angeles midnight even on the days the clocks change), 85 for the page's logic (reading and checking rows, applying Realtime changes, freshness, follows and keyword matching, saved items, trends and step lines, tabs, the poster mosaic and title), the rest from Assignment 4. External calls are always faked.
 - **Checked in the browser, by hand:** Realtime stayed connected across Clerk's 60-second token life (the first version dropped at exactly 60 s; the fix refreshes the token when less than 30 s is left and rejoins after a close); a rank swap written straight to the database moved the rows on screen; down and stale as above.
 
 ## Running it

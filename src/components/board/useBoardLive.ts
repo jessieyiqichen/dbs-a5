@@ -7,8 +7,9 @@ import { createBrowserDb } from "@/lib/db/client";
 import { BoardFeed, type Connection } from "@/lib/board/feed";
 import { missingItems } from "@/lib/board/live";
 import { loadItems } from "@/lib/board/remote";
+import { missingSaved } from "@/lib/board/saves";
 import { needsFreshToken } from "@/lib/board/token";
-import type { BoardData } from "@/lib/board/types";
+import type { BoardData, Save } from "@/lib/board/types";
 
 export type { Connection };
 export type LoadState = { kind: "loading" } | { kind: "failed" } | { kind: "ready"; data: BoardData };
@@ -40,8 +41,9 @@ export function useBoardDb(): SupabaseClient | null {
   return db;
 }
 
-/** The boards, kept up to date by Realtime (lib/board/feed.ts does the work; this hands its news to React). */
-export function useBoardLive(db: SupabaseClient | null): { load: LoadState; connection: Connection } {
+/** The boards, kept up to date by Realtime (lib/board/feed.ts does the work; this hands its news to React). `saves`
+ *  names items to read even when no board ranks them any more. */
+export function useBoardLive(db: SupabaseClient | null, saves: Save[] = []): { load: LoadState; connection: Connection } {
   const [load, setLoad] = useState<LoadState>({ kind: "loading" });
   const [connection, setConnection] = useState<Connection>("connecting");
 
@@ -56,16 +58,19 @@ export function useBoardLive(db: SupabaseClient | null): { load: LoadState; conn
     return () => feed.stop();
   }, [db]);
 
-  useMissingItems(db, load, setLoad);
+  useMissingItems(db, load, setLoad, saves);
   return { load, connection };
 }
 
-/** Fetches items that are ranked on a board but not read yet (one that came back onto a board unchanged). */
-function useMissingItems(db: SupabaseClient | null, load: LoadState, setLoad: (next: (prev: LoadState) => LoadState) => void) {
+type SetLoad = (next: (prev: LoadState) => LoadState) => void;
+
+/** Fetches items not read yet: ranked on a board (one that came back onto a board unchanged), or saved and off every
+ *  board. */
+function useMissingItems(db: SupabaseClient | null, load: LoadState, setLoad: SetLoad, saves: Save[]) {
   const asked = useRef(new Set<string>());
   useEffect(() => {
     if (!db || load.kind !== "ready") return;
-    const wanted = missingItems(load.data).filter((w) => !asked.current.has(`${w.source}:${w.externalId}`));
+    const wanted = [...missingItems(load.data), ...missingSaved(load.data, saves)].filter((w) => !asked.current.has(`${w.source}:${w.externalId}`));
     if (wanted.length === 0) return;
     wanted.forEach((w) => asked.current.add(`${w.source}:${w.externalId}`));
     loadItems(db, wanted).then(
@@ -77,7 +82,7 @@ function useMissingItems(db: SupabaseClient | null, load: LoadState, setLoad: (n
         ),
       (error: unknown) => console.error("Builder's Board: reading new items failed", error),
     );
-  }, [db, load, setLoad]);
+  }, [db, load, setLoad, saves]);
 }
 
 /** The time now, moved on every few seconds so "checked 12s ago" and the stale state keep up without any new data. */

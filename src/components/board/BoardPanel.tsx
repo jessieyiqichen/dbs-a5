@@ -15,6 +15,8 @@ interface Props {
   rows: HourRow[];
   keywords: string[];
   now: Date;
+  saved: Set<string>;
+  onToggleSave: (row: HourRow) => void;
 }
 
 /** What the header says about a board's last check, in each of the four states (docs/data-flow.md). */
@@ -28,7 +30,7 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 
 /** One leaderboard as a browser window on poster paper (after Aleksandar Savić's windows, docs/references.md): the
  *  site in its title bar, its sign and state, then its ranking, each row with its own hour. */
-export function BoardPanel({ board, state, rows, keywords, now }: Props) {
+export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleSave }: Props) {
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
   return (
@@ -58,7 +60,7 @@ export function BoardPanel({ board, state, rows, keywords, now }: Props) {
       {state === "loading" && rows.length === 0 ? (
         <p className="px-4 py-6 font-bh-mono text-sm">Nothing yet.</p>
       ) : (
-        <HourRows rows={rows} keywords={keywords} now={now} />
+        <HourRows rows={rows} keywords={keywords} now={now} saved={saved} onToggleSave={onToggleSave} />
       )}
     </section>
   );

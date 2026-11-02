@@ -52,6 +52,14 @@ export interface Follow {
   value: string;
 }
 
+/** An item a person kept, with the board it was saved from: its unit and name once it has left the board. */
+export interface Save {
+  id: string;
+  key: string;
+  boardId: BoardId;
+  savedAt: string;
+}
+
 /** "hn:123", the same key the worker uses (supabase/functions/board-worker/lib/types.ts). */
 export const itemKey = (source: string, externalId: string) => `${source}:${externalId}`;
 export const entryKey = (boardId: string, key: string) => `${boardId}|${key}`;

@@ -2,7 +2,7 @@
 
 import { useRef, type KeyboardEvent } from "react";
 import { BOARD_LOOK } from "@/lib/board/look";
-import { RISING_TAB, type Moves, type Tab } from "@/lib/board/tabs";
+import { RISING_TAB, SAVED_TAB, type Moves, type Tab } from "@/lib/board/tabs";
 import { BoardIcon } from "./art/BoardIcon";
 
 interface Props {
@@ -34,7 +34,7 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
     <div role="tablist" aria-label="Your boards" className="flex flex-wrap gap-x-3 gap-y-4">
       {tabs.map((tab, i) => {
         const selected = tab === open;
-        const count = tab === RISING_TAB ? 0 : (counts[tab] ?? 0);
+        const count = tab === RISING_TAB || tab === SAVED_TAB ? 0 : (counts[tab] ?? 0);
         return (
           <button
             key={tab}
@@ -49,8 +49,8 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
             onKeyDown={(e) => onKey(e, i)}
             className={`bh-keycap relative flex min-h-11 items-center gap-2 border-2 border-bh-navy px-3 font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy ${selected ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"}`}
           >
-            {tab === RISING_TAB ? <span aria-hidden className="text-bh-red">▲</span> : <BoardIcon board={tab} size={20} className="block size-5 shrink-0 border-[1.5px] border-bh-navy" />}
-            {tab === RISING_TAB ? "All changes" : BOARD_LOOK[tab].short}
+            <TabSign tab={tab} />
+            {tab === RISING_TAB ? "All changes" : tab === SAVED_TAB ? "Saved" : BOARD_LOOK[tab].short}
             {count > 0 && (
               <span className="absolute -top-2.5 -right-2.5 grid min-w-6 place-items-center bg-bh-navy px-1 font-bh-mono text-[11px] text-bh-off">
                 {count}
@@ -62,4 +62,11 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
       })}
     </div>
   );
+}
+
+/** What sits before a tab's name: a board's sign, the red triangle of changes, or the filled square of a saved item. */
+function TabSign({ tab }: { tab: Tab }) {
+  if (tab === RISING_TAB) return <span aria-hidden className="text-bh-red">▲</span>;
+  if (tab === SAVED_TAB) return <span aria-hidden className="block size-3.5 shrink-0 border-2 border-bh-navy bg-bh-mustard" />;
+  return <BoardIcon board={tab} size={20} className="block size-5 shrink-0 border-[1.5px] border-bh-navy" />;
 }

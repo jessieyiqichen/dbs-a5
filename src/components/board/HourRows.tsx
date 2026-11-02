@@ -6,6 +6,7 @@ import { SCORE_UNIT } from "@/lib/board/copy";
 import { itemKeywords } from "@/lib/board/follows";
 import { ageLabel } from "@/lib/board/freshness";
 import { BOARD_LOOK } from "@/lib/board/look";
+import { OFF_BOARD_RANK } from "@/lib/board/saves";
 import { ItemDetail } from "./ItemDetail";
 import { StepLine } from "./StepLine";
 import { useChangeCount } from "./useChangeCount";
@@ -22,13 +23,16 @@ interface Props {
   now: Date;
   /** Name each row's board: the feed across every followed board. */
   showBoard?: boolean;
+  /** Keys of the items this person saved, and what the mark beside each score does (user, 2026-11-01). */
+  saved: Set<string>;
+  onToggleSave: (row: HourRow) => void;
 }
 
 const rowKey = (row: HourRow) => `${row.boardId}|${row.item.key}`;
 
 /** Rows that each draw their own hour on their own scale, and slide to their new place when the order changes (the
  *  user, 2026-11-01: a ranking that moves, with each item's own change in it, not a race and not a feed). */
-export function HourRows({ rows, quiet = [], keywords, now, showBoard = false }: Props) {
+export function HourRows({ rows, quiet = [], keywords, now, showBoard = false, saved, onToggleSave }: Props) {
   const [open, setOpen] = useState<HourRow | null>(null);
   const list = useFlip<HTMLOListElement>(rows.map(rowKey).join(","));
   return (
@@ -39,7 +43,7 @@ export function HourRows({ rows, quiet = [], keywords, now, showBoard = false }:
         // A window of a fixed height that scrolls, so a 30-row board does not stretch the page (user, 2026-11-01)
         <ol ref={list} className="max-h-[34rem] overflow-y-auto overscroll-contain">
           {rows.map((row) => (
-            <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} />
+            <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} isSaved={saved.has(row.item.key)} onToggleSave={() => onToggleSave(row)} />
           ))}
         </ol>
       )}
@@ -55,9 +59,11 @@ interface RowProps {
   now: Date;
   showBoard: boolean;
   onOpen: () => void;
+  isSaved: boolean;
+  onToggleSave: () => void;
 }
 
-function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
+function Row({ row, keywords, now, showBoard, onOpen, isSaved, onToggleSave }: RowProps) {
   const { item, boardId } = row;
   const unit = SCORE_UNIT[boardId];
   const matched = itemKeywords(item, keywords);
@@ -66,8 +72,9 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
   const still = row.points.length === 0 && item.rise === 0;
   const changes = useChangeCount(item.score);
   return (
-    // The number's column sizes to its widest value (GitHub stars run to six digits), never under the line
-    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_auto]">
+    // The number's column sizes to its widest value (GitHub stars run to six digits), never under the line; the last
+    // column is the save mark
+    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_auto_2.75rem]">
       {/* A board's own tab is a ranking: just the rank. The feed across boards: when, then which board */}
       <p className="font-bh-mono text-[11px] leading-snug">
         {showBoard ? (
@@ -87,12 +94,12 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
         {item.subtitle && <p className="mt-0.5 truncate text-sm text-bh-muted">{item.subtitle}</p>}
         {(showBoard || matched.length > 0) && (
           <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 font-bh-mono text-[11px] text-bh-muted">
-            {showBoard && <span className="border border-bh-navy px-1 text-bh-navy">#{row.rank}</span>}
+            {showBoard && <span className="border border-bh-navy px-1 text-bh-navy">{row.rank === OFF_BOARD_RANK ? "off the board" : `#${row.rank}`}</span>}
             {matched.map((k) => <span key={k} className="border border-bh-cobalt px-1 text-bh-cobalt">{k}</span>)}
           </p>
         )}
       </div>
-      <button type="button" onClick={onOpen} aria-label={`The last hour of ${item.title}`} className={`col-span-3 min-h-11 border-2 border-transparent hover:border-bh-navy focus-visible:outline-3 focus-visible:outline-bh-navy sm:col-span-1 ${still ? "text-bh-muted" : "text-bh-navy"}`}>
+      <button type="button" onClick={onOpen} aria-label={`The last hour of ${item.title}`} className={`col-span-4 min-h-11 border-2 border-transparent hover:border-bh-navy focus-visible:outline-3 focus-visible:outline-bh-navy sm:col-span-1 ${still ? "text-bh-muted" : "text-bh-navy"}`}>
         <StepLine points={row.points} before={before} now={now} />
       </button>
       {/* The number itself, as a leaderboard shows it (the user, 2026-11-01); the line beside it is the hour's change */}
@@ -102,6 +109,16 @@ function Row({ row, keywords, now, showBoard, onOpen }: RowProps) {
         </span>
         <span className="block font-bh-mono text-[10px] text-bh-muted">{unit}</span>
       </p>
+      {/* The save mark: an empty square, filled mustard once kept, like a pressed key (user, 2026-11-01) */}
+      <button
+        type="button"
+        onClick={onToggleSave}
+        aria-pressed={isSaved}
+        aria-label={isSaved ? `Saved: ${item.title}. Press to remove it from Saved` : `Save ${item.title}`}
+        className="row-start-1 col-start-4 grid size-11 place-items-center justify-self-end hover:bg-bh-page focus-visible:outline-3 focus-visible:outline-bh-navy sm:col-start-5"
+      >
+        <span aria-hidden className={`block size-4 border-2 border-bh-navy ${isSaved ? "bg-bh-mustard" : "bg-transparent"}`} />
+      </button>
     </li>
   );
 }

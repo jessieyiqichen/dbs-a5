@@ -1,6 +1,6 @@
 "use client";
 
-import { changeRows, type Changes } from "@/lib/board/changes";
+import { changeRows, type Changes, type HourRow } from "@/lib/board/changes";
 import { BOARD_LOOK, LETTER_COLORS } from "@/lib/board/look";
 import { pulse, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
@@ -23,10 +23,12 @@ interface Props {
   keywords: string[];
   series: Series;
   now: Date;
+  saved: Set<string>;
+  onToggleSave: (row: HourRow) => void;
 }
 
 /** The "All changes" tab: every followed board's changes this hour in one feed, then the pulse of all of them. */
-export function RisingTab({ data, boards, keywords, series, now }: Props) {
+export function RisingTab({ data, boards, keywords, series, now, saved, onToggleSave }: Props) {
   return (
     <div className="flex flex-col gap-10">
       <section aria-labelledby="changes-heading">
@@ -34,7 +36,7 @@ export function RisingTab({ data, boards, keywords, series, now }: Props) {
           <Pictograms boards={boards} />
         </LetterHeading>
         <div className="border-2 border-t-0 border-bh-navy bg-bh-off">
-          <HourRows {...feedRows(changeRows(data, boards, series))} keywords={keywords} now={now} showBoard />
+          <HourRows {...feedRows(changeRows(data, boards, series))} keywords={keywords} now={now} showBoard saved={saved} onToggleSave={onToggleSave} />
         </div>
       </section>
       <section aria-labelledby="pulse-heading">

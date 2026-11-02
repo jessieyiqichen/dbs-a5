@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { rankedRows } from "@/lib/board/changes";
-import { LOAD_FAILED, SAVE_FAILED } from "@/lib/board/copy";
+import { rankedRows, type HourRow } from "@/lib/board/changes";
+import { LOAD_FAILED, SAVE_FAILED, SAVES_LOAD_FAILED } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
 import { shownKeys } from "@/lib/board/live";
-import { RISING_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
+import { savedKeys, savedRows } from "@/lib/board/saves";
+import { RISING_TAB, SAVED_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
 import { boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
 import { BoardPanel } from "./BoardPanel";
@@ -15,9 +16,11 @@ import { FollowEditor } from "./FollowEditor";
 import { LetterHeading } from "./LetterHeading";
 import { PosterHero } from "./PosterHero";
 import { RisingTab } from "./RisingTab";
+import { SavedTab } from "./SavedTab";
 import { useFollows } from "./useFollows";
 import { useBoardDb, useBoardLive, useNow } from "./useBoardLive";
 import { usePersisted } from "./usePersisted";
+import { useSaves } from "./useSaves";
 import { useTrends } from "./useTrends";
 
 /** How many of a board's rows (by rank and by rise) get their hour read: the whole board, so every change has a line. */
@@ -27,7 +30,9 @@ const ROWS_WITH_HISTORY = 50;
  *  (user, 2026-10-31: the boards were at the bottom of a long page). */
 export function BoardScreen() {
   const db = useBoardDb();
-  const { load, connection } = useBoardLive(db);
+  const saves = useSaves(db);
+  const mySaves = saves.state.kind === "ready" ? saves.state.saves : [];
+  const { load, connection } = useBoardLive(db, mySaves);
   const follows = useFollows(db);
   const now = useNow();
   const [editing, setEditing] = useState(false);
@@ -37,7 +42,10 @@ export function BoardScreen() {
   const data = load.kind === "ready" ? load.data : null;
   const mine = follows.state.kind === "ready" ? follows.state.follows : [];
   const shown = followedBoards(mine);
-  const trends = useTrends(db, data, data ? shownKeys(data, shown, ROWS_WITH_HISTORY) : [], shown);
+  const saved = savedKeys(mySaves);
+  // Saved items get their hour read too, so the Saved tab draws lines for items that left their board
+  const withHistory = data ? [...new Set([...shownKeys(data, shown, ROWS_WITH_HISTORY), ...saved])] : [];
+  const trends = useTrends(db, data, withHistory, shown);
   // Nothing followed yet: the chooser counts as opened by the person, so their first pick does not close it (seen on
   // the live site, 2026-11-01); Done closes it. Set during render, as React does for state that follows props.
   if (follows.state.kind === "ready" && shown.length === 0 && !editing) setEditing(true);
@@ -52,6 +60,7 @@ export function BoardScreen() {
     setSeen((s) => markSeen(markSeen(s, trends.turns, open), trends.turns, tab));
     setRemembered(tab);
   };
+  const onToggleSave = (row: HourRow) => void saves.toggle(row.item.key, row.boardId);
 
   return (
     <div className="bh-paper flex flex-1 flex-col font-bh text-bh-navy">
@@ -65,7 +74,8 @@ export function BoardScreen() {
             </button>
           </div>
         )}
-        {follows.saveFailed && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
+        {(follows.saveFailed || saves.saveFailed) && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
+        {saves.state.kind === "failed" && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVES_LOAD_FAILED}</p>}
         {choosing ? (
           <section aria-labelledby="follow-heading">
             <LetterHeading id="follow-heading" label="Choose what to follow" lines={["FOLLOW"]}>
@@ -85,9 +95,11 @@ export function BoardScreen() {
         ) : (
           <div role="tabpanel" id={panelId(open)} aria-labelledby={tabId(open)}>
             {open === RISING_TAB ? (
-              <RisingTab data={data} boards={shown} keywords={keywords} series={trends.series} now={now} />
+              <RisingTab data={data} boards={shown} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} />
+            ) : open === SAVED_TAB ? (
+              <SavedTab rows={savedRows(data, mySaves, trends.series)} keywords={keywords} now={now} saved={saved} onToggleSave={onToggleSave} />
             ) : (
-              <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} />
+              <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} />
             )}
           </div>
         )}
@@ -102,10 +114,12 @@ interface OneBoardProps {
   keywords: string[];
   series: Series;
   now: Date;
+  saved: Set<string>;
+  onToggleSave: (row: HourRow) => void;
 }
 
 /** One board in its window: its ranking, each row with its own hour. */
-function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
+function OneBoard({ data, id, keywords, series, now, saved, onToggleSave }: OneBoardProps) {
   const board = data.boards[id];
   if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
   return (
@@ -115,6 +129,8 @@ function OneBoard({ data, id, keywords, series, now }: OneBoardProps) {
       rows={rankedRows(data, id, series)}
       keywords={keywords}
       now={now}
+      saved={saved}
+      onToggleSave={onToggleSave}
     />
   );
 }

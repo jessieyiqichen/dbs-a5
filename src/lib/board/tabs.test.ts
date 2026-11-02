@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { RISING_TAB, markSeen, pickTab, tabsFor, unseen } from "./tabs";
+import { RISING_TAB, SAVED_TAB, markSeen, pickTab, tabsFor, unseen } from "./tabs";
 
 describe("tabsFor", () => {
-  it("lists the followed boards in the page's own order, then the rising tab", () => {
-    expect(tabsFor(["producthunt", "hn_front"])).toEqual(["hn_front", "producthunt", RISING_TAB]);
+  it("lists the followed boards in the page's own order, then the rising tab, then saved", () => {
+    expect(tabsFor(["producthunt", "hn_front"])).toEqual(["hn_front", "producthunt", RISING_TAB, SAVED_TAB]);
   });
 
-  it("is only the rising tab when nothing is followed", () => {
-    expect(tabsFor([])).toEqual([RISING_TAB]);
+  it("is the rising and saved tabs when nothing is followed", () => {
+    expect(tabsFor([])).toEqual([RISING_TAB, SAVED_TAB]);
   });
 });
 
@@ -45,8 +45,9 @@ describe("markSeen", () => {
     expect(before).toEqual({ hn_front: 1 });
   });
 
-  it("changes nothing for the rising tab", () => {
+  it("changes nothing for the rising or saved tab", () => {
     const before = { hn_front: 1 };
     expect(markSeen(before, { hn_front: 5 }, RISING_TAB)).toBe(before);
+    expect(markSeen(before, { hn_front: 5 }, SAVED_TAB)).toBe(before);
   });
 });

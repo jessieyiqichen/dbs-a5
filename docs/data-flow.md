@@ -4,7 +4,7 @@ Drawn on 2026-10-31, before any worker or page code was written. It is the plan 
 
 ```mermaid
 flowchart LR
-    subgraph Sources["Seven leaderboards"]
+    subgraph Sources["Six leaderboards"]
         HN["Hacker News API<br>front page, Show HN"]
         GH["GitHub trending<br>web page"]
         HF["Hugging Face API<br>models, Daily Papers"]
@@ -22,6 +22,7 @@ flowchart LR
         history[("item_history<br>score each time it changed")]
         runs[("runs<br>one row per run")]
         follows[("follows<br>your boards and keywords<br>RLS: only you")]
+        saves[("saves<br>the items you kept<br>RLS: only you")]
     end
 
     W -->|"only rows that changed (upsert)"| items
@@ -32,6 +33,7 @@ flowchart LR
 
     Clerk["Clerk<br>sign-in"] -->|"session token"| Page["/board on Vercel<br>Next.js"]
     Page -->|"read and change your follows<br>with your token"| follows
+    Page -->|"save and unsave items<br>with your token"| saves
     items -->|"Realtime: each change"| Page
     entries -->|"Realtime"| Page
     boards -->|"Realtime: freshness"| Page
@@ -49,7 +51,7 @@ flowchart LR
 | Database → `items.rise_1h` | A trigger sets the rise in the same write as the score (one Realtime message, not two); Cron recomputes every board's standing rises every 5 minutes as the hour-ago baseline moves | Refreshing after every run, as it first did, was most of the traffic: hn_front alone 1,095 row writes an hour, each a message to every open page |
 | Worker → `boards`, `runs` | When it checked each board, whether it worked, how many rows changed | Without these the page cannot tell fresh from stale from down |
 | Clerk → page | Who is signed in, as a token Supabase trusts | Clerk keys or the Supabase third-party auth setting change: sign-in still works, but every read of `follows` returns nothing |
-| Page → `follows` | Which boards and keywords you follow, written with your own token | RLS lets each person read and change only their own rows; a missing policy means you see nothing, with no error |
+| Page → `follows`, `saves` | Which boards and keywords you follow, and which items you kept (added 2026-11-01), written with your own token | RLS lets each person read and change only their own rows; a missing policy means you see nothing, with no error. A saved item's row in `items` is never deleted, so it stays readable after leaving its board |
 | Realtime → page | Each change to `items`, `board_entries`, `boards` | Realtime needs three things: the table added to the publication, read access granted, and an RLS policy that lets the person read it. Any one missing: the page gets nothing, with no error |
 
 ## Freshness, as the page shows it

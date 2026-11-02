@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BOARD_COLUMNS, ENTRY_WITH_ITEM_COLUMNS, ITEM_COLUMNS, readSnapshot, rowKey, rowToItem } from "./rows";
 import type { Series } from "./trends";
-import type { BoardData, Follow, Item } from "./types";
+import { BOARD_IDS, itemKey, type BoardData, type BoardId, type Follow, type Item, type Save } from "./types";
 
 type Db = Pick<SupabaseClient, "from">;
 
@@ -60,6 +60,38 @@ export async function addFollow(db: Db, kind: Follow["kind"], value: string): Pr
 export async function removeFollow(db: Db, id: string): Promise<void> {
   const { error } = await db.from("follows").delete().eq("id", id);
   check("follows", error);
+}
+
+const isBoardId = (v: unknown): v is BoardId => (BOARD_IDS as readonly unknown[]).includes(v);
+const SAVE_COLUMNS = "id, source, external_id, board_id, saved_at";
+
+function rowToSave(r: Record<string, unknown>): Save | null {
+  if (typeof r.id !== "string" || typeof r.source !== "string" || typeof r.external_id !== "string") return null;
+  if (!isBoardId(r.board_id) || typeof r.saved_at !== "string") return null;
+  return { id: r.id, key: itemKey(r.source, r.external_id), boardId: r.board_id, savedAt: r.saved_at };
+}
+
+/** The signed-in person's saved items; as with follows, the database answers with their rows only. */
+export async function loadSaves(db: Db): Promise<Save[]> {
+  const { data, error } = await db.from("saves").select(SAVE_COLUMNS).order("saved_at");
+  check("saves", error);
+  return (data ?? []).map(rowToSave).filter((s): s is Save => s !== null);
+}
+
+/** Saves one item from one board. user_id is never sent: the database fills it in from the person's token. */
+export async function addSave(db: Db, key: string, boardId: BoardId): Promise<Save> {
+  const at = key.indexOf(":");
+  const row = { source: key.slice(0, at), external_id: key.slice(at + 1), board_id: boardId };
+  const { data, error } = await db.from("saves").insert(row).select(SAVE_COLUMNS).single();
+  check("saves", error);
+  const save = data ? rowToSave(data) : null;
+  if (!save) throw new Error("saves: the new row came back in the wrong shape");
+  return save;
+}
+
+export async function removeSave(db: Db, id: string): Promise<void> {
+  const { error } = await db.from("saves").delete().eq("id", id);
+  check("saves", error);
 }
 
 /** Supabase answers at most 1,000 rows a request, so history is read page by page. */

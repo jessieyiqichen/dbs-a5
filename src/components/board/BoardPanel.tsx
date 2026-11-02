@@ -58,9 +58,11 @@ export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleS
           aria-pressed
           aria-label={`Following ${board.name}. Press to stop following it`}
           onClick={onUnfollow}
-          className="bh-keycap min-h-9 border-2 border-bh-navy bg-bh-mustard px-2 font-bh-mono text-[11px] font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy"
+          className="group bh-keycap min-h-9 border-2 border-bh-navy bg-bh-mustard px-2 font-bh-mono text-[11px] font-bold hover:bg-bh-off focus-visible:bg-bh-off focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy"
         >
-          Following
+          {/* Reads as a state until pointed at, then says what pressing does (user, 2026-11-01: "how do I unfollow this one?") */}
+          <span aria-hidden className="group-hover:hidden group-focus-visible:hidden">Following</span>
+          <span aria-hidden className="hidden group-hover:inline group-focus-visible:inline">Unfollow</span>
         </button>
       </header>
       {note && (

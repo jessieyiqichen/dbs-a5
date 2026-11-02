@@ -7,6 +7,8 @@ import { BoardIcon } from "./art/BoardIcon";
 
 interface Props {
   tabs: Tab[];
+  /** What this group of tabs is, for assistive technology ("Your boards", "Across your boards"). */
+  label: string;
   open: Tab;
   onOpen: (tab: Tab) => void;
   /** Moves each board made while its tab was closed. */
@@ -16,10 +18,13 @@ interface Props {
 export const tabId = (tab: Tab) => `tab-${tab}`;
 export const panelId = (tab: Tab) => `panel-${tab}`;
 
-/** One keycap per followed board, then "Rising now". A closed board that moves shows how many times, so it is clear
- *  where things are happening without opening every tab. Arrow keys, Home and End move between tabs (ARIA tabs). */
-export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
+/** One group of keycap tabs (ARIA tabs: arrow keys, Home and End move within the group). A closed board that moves
+ *  shows how many times, so it is clear where things are happening without opening every tab. The page lays out two
+ *  groups, boards on one row and the tabs across boards on the next (BoardNav). */
+export function BoardTabs({ tabs, label, open, onOpen, counts }: Props) {
   const refs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
+  // The open tab takes the keyboard; a group with no open tab hands it to its first, so the group stays reachable
+  const focusable = tabs.includes(open) ? open : tabs[0];
   const go = (tab: Tab) => {
     onOpen(tab);
     refs.current[tab]?.focus();
@@ -31,7 +36,7 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
     go(tabs[(next + tabs.length) % tabs.length]);
   };
   return (
-    <div role="tablist" aria-label="Your boards" className="flex flex-wrap gap-x-3 gap-y-4">
+    <div role="tablist" aria-label={label} className="flex flex-wrap gap-x-3 gap-y-4">
       {tabs.map((tab, i) => {
         const selected = tab === open;
         const count = tab === RISING_TAB || tab === SAVED_TAB ? 0 : (counts[tab] ?? 0);
@@ -44,7 +49,7 @@ export function BoardTabs({ tabs, open, onOpen, counts }: Props) {
             type="button"
             aria-selected={selected}
             aria-controls={panelId(tab)}
-            tabIndex={selected ? 0 : -1}
+            tabIndex={tab === focusable ? 0 : -1}
             onClick={() => onOpen(tab)}
             onKeyDown={(e) => onKey(e, i)}
             className={`bh-keycap relative flex min-h-11 items-center gap-2 border-2 border-bh-navy px-3 font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy ${selected ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"}`}

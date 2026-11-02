@@ -10,9 +10,9 @@ import { savedKeys, savedRows } from "@/lib/board/saves";
 import { RISING_TAB, SAVED_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
 import { boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
+import { BoardNav } from "./BoardNav";
 import { BoardPanel } from "./BoardPanel";
-import { BoardTabs, panelId, tabId } from "./BoardTabs";
-import { FollowControls } from "./FollowControls";
+import { panelId, tabId } from "./BoardTabs";
 import { FollowEditor } from "./FollowEditor";
 import { LetterHeading } from "./LetterHeading";
 import { PosterHero } from "./PosterHero";
@@ -73,10 +73,18 @@ export function BoardScreen() {
       <PosterHero weights={boardWeights(data, shown)} turns={trends.turns} connection={connection} now={now} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
         {!choosing && (
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <BoardTabs tabs={tabs} open={open} onOpen={onOpen} counts={unseen(trends.turns, seen, open)} />
-            <FollowControls boards={data.boards} follows={mine} shown={shown} counts={keywordCounts(data, shown, allKeywords)} onAdd={follows.add} onRemove={follows.remove} onOpen={onOpen} />
-          </div>
+          <BoardNav
+            tabs={tabs}
+            open={open}
+            onOpen={onOpen}
+            counts={unseen(trends.turns, seen, open)}
+            boards={data.boards}
+            follows={mine}
+            shown={shown}
+            keywordCounts={keywordCounts(data, shown, allKeywords)}
+            onAdd={follows.add}
+            onRemove={follows.remove}
+          />
         )}
         {(follows.saveFailed || saves.saveFailed) && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
         {saves.state.kind === "failed" && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVES_LOAD_FAILED}</p>}

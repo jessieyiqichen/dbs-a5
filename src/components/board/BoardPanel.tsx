@@ -17,6 +17,8 @@ interface Props {
   now: Date;
   saved: Set<string>;
   onToggleSave: (row: HourRow) => void;
+  /** Stops following this board (user, 2026-11-01: taking a board away happens on the board, not on a chooser page). */
+  onUnfollow: () => void;
 }
 
 /** What the header says about a board's last check, in each of the four states (docs/data-flow.md). */
@@ -30,7 +32,7 @@ function stateLine(state: Freshness, board: Board, now: Date): string {
 
 /** One leaderboard as a browser window on poster paper (after Aleksandar Savić's windows, docs/references.md): the
  *  site in its title bar, its sign and state, then its ranking, each row with its own hour. */
-export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleSave }: Props) {
+export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleSave, onUnfollow }: Props) {
   const note = STATE_NOTE[state];
   const quiet = state === "stale" || state === "down";
   return (
@@ -50,6 +52,16 @@ export function BoardPanel({ board, state, rows, keywords, now, saved, onToggleS
           <span aria-hidden className={`mr-1.5 inline-block size-2 ${state === "fresh" ? "rounded-full bg-bh-cobalt" : state === "down" ? "bg-bh-red" : "bg-bh-muted"}`} />
           {stateLine(state, board, now)}
         </p>
+        {/* A pressed key: this board is followed. Press it to let the board go; "+" beside the tabs brings it back */}
+        <button
+          type="button"
+          aria-pressed
+          aria-label={`Following ${board.name}. Press to stop following it`}
+          onClick={onUnfollow}
+          className="bh-keycap min-h-9 border-2 border-bh-navy bg-bh-mustard px-2 font-bh-mono text-[11px] font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy"
+        >
+          Following
+        </button>
       </header>
       {note && (
         <p role="status" className="border-b-2 border-bh-navy bg-bh-mustard px-4 py-2 text-sm font-bold">

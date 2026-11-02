@@ -12,6 +12,7 @@ import { boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
 import { BoardPanel } from "./BoardPanel";
 import { BoardTabs, panelId, tabId } from "./BoardTabs";
+import { FollowControls } from "./FollowControls";
 import { FollowEditor } from "./FollowEditor";
 import { LetterHeading } from "./LetterHeading";
 import { PosterHero } from "./PosterHero";
@@ -61,6 +62,11 @@ export function BoardScreen() {
     setRemembered(tab);
   };
   const onToggleSave = (row: HourRow) => void saves.toggle(row.item.key, row.boardId);
+  const unfollow = (id: BoardId) => {
+    const follow = mine.find((f) => f.kind === "board" && f.value === id);
+    if (follow) void follows.remove(follow.id);
+  };
+  const allKeywords = [...keywords, ...SUGGESTED_KEYWORDS];
 
   return (
     <div className="bh-paper flex flex-1 flex-col font-bh text-bh-navy">
@@ -69,9 +75,7 @@ export function BoardScreen() {
         {!choosing && (
           <div className="flex flex-wrap items-start justify-between gap-4">
             <BoardTabs tabs={tabs} open={open} onOpen={onOpen} counts={unseen(trends.turns, seen, open)} />
-            <button type="button" onClick={() => setEditing(true)} className="bh-keycap ml-auto min-h-11 border-2 border-bh-navy bg-bh-off px-4 font-bold">
-              Choose what to follow
-            </button>
+            <FollowControls boards={data.boards} follows={mine} shown={shown} counts={keywordCounts(data, shown, allKeywords)} onAdd={follows.add} onRemove={follows.remove} onOpen={onOpen} />
           </div>
         )}
         {(follows.saveFailed || saves.saveFailed) && <p role="alert" className="border-2 border-bh-navy bg-bh-mustard px-3 py-2 font-bold">{SAVE_FAILED}</p>}
@@ -89,7 +93,7 @@ export function BoardScreen() {
               </div>
             </LetterHeading>
             <div className="border-2 border-t-0 border-bh-navy bg-bh-off p-5">
-              <FollowEditor boards={data.boards} follows={mine} counts={keywordCounts(data, shown, [...keywords, ...SUGGESTED_KEYWORDS])} onAdd={follows.add} onRemove={follows.remove} />
+              <FollowEditor boards={data.boards} follows={mine} counts={keywordCounts(data, shown, allKeywords)} onAdd={follows.add} onRemove={follows.remove} />
             </div>
           </section>
         ) : (
@@ -99,7 +103,7 @@ export function BoardScreen() {
             ) : open === SAVED_TAB ? (
               <SavedTab rows={savedRows(data, mySaves, trends.series)} keywords={keywords} now={now} saved={saved} onToggleSave={onToggleSave} />
             ) : (
-              <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} />
+              <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} onUnfollow={() => unfollow(open)} />
             )}
           </div>
         )}
@@ -116,10 +120,11 @@ interface OneBoardProps {
   now: Date;
   saved: Set<string>;
   onToggleSave: (row: HourRow) => void;
+  onUnfollow: () => void;
 }
 
 /** One board in its window: its ranking, each row with its own hour. */
-function OneBoard({ data, id, keywords, series, now, saved, onToggleSave }: OneBoardProps) {
+function OneBoard({ data, id, keywords, series, now, saved, onToggleSave, onUnfollow }: OneBoardProps) {
   const board = data.boards[id];
   if (!board) return <p className="font-bh-mono text-sm">This board has not been checked yet.</p>;
   return (
@@ -131,6 +136,7 @@ function OneBoard({ data, id, keywords, series, now, saved, onToggleSave }: OneB
       now={now}
       saved={saved}
       onToggleSave={onToggleSave}
+      onUnfollow={onUnfollow}
     />
   );
 }

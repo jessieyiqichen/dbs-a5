@@ -50,7 +50,8 @@ export function FollowEditor({ boards, follows, counts, onAdd, onRemove }: Props
   );
 }
 
-function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string; on: boolean; busy: boolean; onToggle: () => void }) {
+/** One board as a keycap: pressed (mustard) while followed. Also the rows of the "Add a board" sheet (FollowControls). */
+export function BoardKey({ id, name, on, busy, onToggle }: { id: BoardId; name: string; on: boolean; busy: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
@@ -77,9 +78,12 @@ interface KeywordProps {
   counts: Record<string, number>;
   onAdd: Props["onAdd"];
   onRemove: Props["onRemove"];
+  /** False inside the Keywords sheet, whose own title says it. */
+  heading?: boolean;
 }
 
-function Keywords({ follows, counts, onAdd, onRemove }: KeywordProps) {
+/** The keywords to pick out, with how many items each finds now. Also the body of the Keywords sheet (FollowControls). */
+export function Keywords({ follows, counts, onAdd, onRemove, heading = true }: KeywordProps) {
   const [draft, setDraft] = useState("");
   const [invalid, setInvalid] = useState(false);
   const have = new Set(follows.map((f) => f.value));
@@ -100,8 +104,8 @@ function Keywords({ follows, counts, onAdd, onRemove }: KeywordProps) {
   };
 
   return (
-    <section aria-labelledby="follow-keywords">
-      <h3 id="follow-keywords" className="mb-1 text-xl font-extrabold tracking-[-0.02em]">Keywords</h3>
+    <section aria-labelledby={heading ? "follow-keywords" : undefined}>
+      {heading && <h3 id="follow-keywords" className="mb-1 text-xl font-extrabold tracking-[-0.02em]">Keywords</h3>}
       <p className="mb-4 font-bh-mono text-[11px] text-bh-muted">Items that mention one get a chip on every board. The number is how many it picks out now.</p>
       <form onSubmit={submit} noValidate>
         <label htmlFor="keyword" className="sr-only">A keyword to pick out</label>

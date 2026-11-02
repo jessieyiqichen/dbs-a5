@@ -37,12 +37,12 @@ flowchart LR
 
 | On the page | What it is |
 |---|---|
-| Poster banner | A mosaic the data draws: the board that rose most this hour takes the stage and the title weaves through its shape; a shape turns when its board moves |
+| Poster banner | The title as one line of condensed capitals across a taped sheet, a strip of tiles the data lays out under it, and the board that rose most this hour stamped over the title's end; a shape turns when its board moves |
 | Tabs | One per followed board, then All changes. A closed tab shows how many times its board moved while you were on another |
 | A board | Its ranking, as a browser window. Each row: rank, title, the source's one-line description, a step line of that item's own last hour on its own scale (the latest step in red), its score, and a square to save it. A row slides to its new place when its rank changes; the score flashes when it moves |
 | All changes | Every followed board's changes this hour in one feed, latest first, with the pulse: one note per change, minute by minute, per board |
 | Saved | The items you pressed the square on, newest first, from any board. An item stays after it leaves its board, with "off the board" in place of its rank, and its score keeps moving with Realtime like any other |
-| Choose what to follow | Boards as keycaps that stay pressed while followed; keywords that pick out matching rows with a count of how many they match now. Saved to your account, seen only by you |
+| Following | Beside the tabs, "+" opens a sheet over the board with the boards not yet followed (one press adds it and opens its tab) and "Keywords" opens one for the words to pick out, each with a count of how many rows it matches now; a board's window has a pressed "Following" key that lets it go. Only the first visit, with nothing followed yet, shows the full-page chooser. Saved to your account, seen only by you |
 
 ## Live, stale, down
 

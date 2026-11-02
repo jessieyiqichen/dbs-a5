@@ -21,6 +21,12 @@ describe("mosaic", () => {
     expect(cells.some((c) => cellsOf(STAGE).includes(c))).toBe(false);
   });
 
+  it("fills every cell when there is no stage, and still names the board that rose most (the stamp)", () => {
+    const flat = mosaic(weights([["hn_front", 1], ["github_trending", 0.5]]), {}, COLS, ROWS, { col: 0, row: 0, w: 0, h: 0 });
+    expect(flat.tiles.flatMap(cellsOf)).toHaveLength(COLS * ROWS);
+    expect(flat.star?.boardId).toBe("hn_front");
+  });
+
   it("puts the board that rose most on the stage, and every other board in at least one tile, more as it rose more", () => {
     expect(poster.star?.boardId).toBe("hn_front");
     const of = (id: BoardId) => poster.tiles.filter((t) => t.boardId === id);

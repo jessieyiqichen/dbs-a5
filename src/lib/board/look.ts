@@ -35,12 +35,6 @@ export const TILE_CLASS: Record<BlockColor, string> = {
   off: "bg-bh-off text-bh-navy",
 };
 
-/** The outline on the poster title's front letters, so they read over the stage shape: off-white, except over an
- *  off-white shape (Show HN, HF models, Papers), where off-white letters and shape merged into one (user, 2026-11-01). */
-export function titleHalo(shapeColor: BlockColor | null): "off" | "navy" {
-  return shapeColor === "off" ? "navy" : "off";
-}
-
 /** Letter colours for headings on navy, one per letter in turn (after the Accessibility Hackathon poster). Lighter
  *  than the tile colours, since cobalt and green are too dark on navy: every one is at least 5.3:1 on navy. */
 export const LETTER_COLORS = ["#6f8ff0", "#e2b04a", "#ee98a3", "#4fae86", "#f4f1ea", "#e8674f"] as const;

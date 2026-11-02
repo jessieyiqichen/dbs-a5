@@ -1,7 +1,7 @@
-// The poster across the top of the board. A plain stage on one side holds the board that rose most in the last hour,
-// as one large shape with the title woven around it (after monday.com's hackathon poster); the rest is a mosaic of
-// square tiles that touch edge to edge (after Stripe's Dublin Hackathon posters). The data decides both: every other
-// board takes tiles in proportion to its rise, and plain tiles fill what is left. See docs/references.md.
+// The poster across the top of the board: a mosaic of square tiles that touch edge to edge (after Stripe's Dublin
+// Hackathon posters), and the board that rose most in the last hour as the star, drawn by the page as a stamp over the
+// title (until 2026-11-01 it had a stage of its own, with the title woven around it). The data decides both: every
+// other board takes tiles in proportion to its rise, and plain tiles fill what is left. See docs/references.md.
 import { BOARD_LOOK, type BlockColor, type Shape } from "./look";
 import type { BoardId } from "./types";
 

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { boardFontClass } from "@/app/board/fonts";
 import { BOARD_IDS } from "@/lib/board/types";
 import { BoardIcon } from "./art/BoardIcon";
+import { Tape } from "./art/Tape";
 import "@/app/board/board.css";
 
 const INTRO = "The leaderboards builders check every day, on one board that moves on its own.";
@@ -31,9 +32,4 @@ export function BoardAuthScreen({ children }: { children: ReactNode }) {
       </main>
     </div>
   );
-}
-
-/** A strip of translucent tape, as on the poster. */
-function Tape({ className }: { className: string }) {
-  return <span aria-hidden className={`absolute h-7 w-24 bg-bh-off/55 shadow-[0_1px_2px_rgb(0_0_0/0.15)] ${className}`} />;
 }

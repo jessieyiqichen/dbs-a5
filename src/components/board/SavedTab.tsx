@@ -18,9 +18,8 @@ interface Props {
 export function SavedTab({ rows, keywords, now, saved, onToggleSave }: Props) {
   return (
     <section aria-labelledby="saved-heading">
-      <LetterHeading id="saved-heading" label="Saved" lines={["SAVED"]}>
-        <p className="max-w-xs font-bh-mono text-[11px] text-bh-off">Kept to your account, seen only by you. An item stays here after it leaves its board.</p>
-      </LetterHeading>
+      {/* No note beside the heading (user, 2026-11-01: "what is this for"); the empty state says what to do */}
+      <LetterHeading id="saved-heading" label="Saved" lines={["SAVED"]} />
       <div className="border-2 border-t-0 border-bh-navy bg-bh-off">
         {rows.length === 0 ? (
           <p className="px-4 py-6 font-bh-mono text-sm">{SAVED_EMPTY}</p>

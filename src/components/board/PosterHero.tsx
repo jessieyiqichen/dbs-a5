@@ -2,7 +2,7 @@
 
 import { CONNECTION_LABEL } from "@/lib/board/copy";
 import type { Connection } from "@/lib/board/feed";
-import { TILE_CLASS } from "@/lib/board/look";
+import { TILE_CLASS, titleHalo } from "@/lib/board/look";
 import { mosaic, type Area, type Star, type Tile } from "@/lib/board/mosaic";
 import type { BoardId } from "@/lib/board/types";
 import { Shape } from "./art/Shape";
@@ -78,7 +78,7 @@ function Stage({ star, area }: { star: Star | null; area: Area }) {
   const tile = star?.tile ?? "mustard";
   return (
     <div aria-hidden className={`relative overflow-hidden [container-type:inline-size] ${TILE_CLASS[tile]}`} style={{ gridColumn: `${area.col + 1} / span ${area.w}`, gridRow: `${area.row + 1} / span ${area.h}` }}>
-      <Words front={false} />
+      <Words front={false} halo="off" />
       {star && (
         // A square in the middle of the stage, so the shape keeps its proportions on a wide stage
         <div className="absolute top-1/2 left-1/2 z-20 aspect-square h-[74%] -translate-x-1/2 -translate-y-1/2">
@@ -87,17 +87,23 @@ function Stage({ star, area }: { star: Star | null; area: Area }) {
           </div>
         </div>
       )}
-      <Words front />
+      <Words front halo={titleHalo(star?.color ?? null)} />
     </div>
   );
 }
 
-function Words({ front }: { front: boolean }) {
+/** Front letters carry a halo, so they read over any shape (navy over cobalt alone is 2.3:1): off-white, or navy over
+ *  an off-white shape. Both classes are written out so Tailwind finds them. */
+const HALO_CLASS = {
+  off: "[paint-order:stroke_fill] [-webkit-text-stroke:0.07em_var(--color-bh-off)]",
+  navy: "[paint-order:stroke_fill] [-webkit-text-stroke:0.07em_var(--color-bh-navy)]",
+} as const;
+
+function Words({ front, halo }: { front: boolean; halo: keyof typeof HALO_CLASS }) {
   return (
     <div className={`absolute inset-0 flex flex-col justify-between px-[5%] py-[3%] ${front ? "z-30" : "z-10"}`}>
       {WORDS.map((word, w) => (
-        // Front letters carry an off-white halo, so they read over any shape (navy over cobalt alone is 2.3:1)
-        <p key={word} className={`text-[18.5cqw] leading-none font-black tracking-[-0.05em] lowercase ${w === 1 ? "self-end" : ""} ${front ? "[paint-order:stroke_fill] [-webkit-text-stroke:0.07em_var(--color-bh-off)]" : ""}`}>
+        <p key={word} className={`text-[18.5cqw] leading-none font-black tracking-[-0.05em] lowercase ${w === 1 ? "self-end" : ""} ${front ? HALO_CLASS[halo] : ""}`}>
           {[...word].map((letter, i) => (
             <span key={i} className={front && (i + w) % 2 === 1 ? "text-transparent" : ""}>{letter}</span>
           ))}

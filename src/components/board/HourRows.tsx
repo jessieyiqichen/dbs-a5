@@ -74,7 +74,7 @@ function Row({ row, keywords, now, showBoard, onOpen, isSaved, onToggleSave }: R
   return (
     // The number's column sizes to its widest value (GitHub stars run to six digits), never under the line; the last
     // column is the save mark
-    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_auto_2.75rem]">
+    <li data-key={rowKey(row)} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto_auto] items-center gap-x-3 gap-y-2 border-b border-bh-navy/15 bg-bh-off px-4 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_11rem_auto_auto]">
       {/* A board's own tab is a ranking: just the rank. The feed across boards: when, then which board */}
       <p className="font-bh-mono text-[11px] leading-snug">
         {showBoard ? (
@@ -109,15 +109,16 @@ function Row({ row, keywords, now, showBoard, onOpen, isSaved, onToggleSave }: R
         </span>
         <span className="block font-bh-mono text-[10px] text-bh-muted">{unit}</span>
       </p>
-      {/* The save mark: an empty square, filled mustard once kept, like a pressed key (user, 2026-11-01) */}
+      {/* A small key that says what it does: Save, and once pressed, Saved in mustard like every chosen key (user,
+          2026-11-01: a bare square gave no hint that it could save) */}
       <button
         type="button"
         onClick={onToggleSave}
         aria-pressed={isSaved}
         aria-label={isSaved ? `Saved: ${item.title}. Press to remove it from Saved` : `Save ${item.title}`}
-        className="row-start-1 col-start-4 grid size-11 place-items-center justify-self-end hover:bg-bh-page focus-visible:outline-3 focus-visible:outline-bh-navy sm:col-start-5"
+        className={`bh-keycap row-start-1 col-start-4 min-h-9 justify-self-end border-2 border-bh-navy px-2 font-bh-mono text-[11px] font-bold focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-bh-navy sm:col-start-5 ${isSaved ? "bg-bh-mustard" : "bg-bh-off hover:bg-bh-page"}`}
       >
-        <span aria-hidden className={`block size-4 border-2 border-bh-navy ${isSaved ? "bg-bh-mustard" : "bg-transparent"}`} />
+        {isSaved ? "Saved" : "Save"}
       </button>
     </li>
   );

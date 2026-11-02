@@ -38,6 +38,6 @@ export const CONNECTION_LABEL = { connecting: "connecting", live: "live", reconn
 export const LOAD_FAILED = "The board didn't load. Check your connection, then reload the page.";
 export const SAVE_FAILED = "That change didn't save. Check your connection and try again.";
 export const KEYWORD_INVALID = "Use 1 to 40 characters.";
-export const SAVED_EMPTY = "Nothing saved yet. Press the square beside a score to keep an item here.";
+export const SAVED_EMPTY = "Nothing saved yet. Press Save beside a score to keep an item here.";
 export const SAVES_LOAD_FAILED = "Your saved items didn't load. Reload the page to see them.";
 export const ROWS_PER_BOARD = 8;

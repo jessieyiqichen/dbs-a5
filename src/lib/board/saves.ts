@@ -2,7 +2,7 @@
 // board: its row in items is never deleted, and Realtime keeps its score moving like any other.
 import type { HourRow } from "./changes";
 import type { Series } from "./trends";
-import type { BoardData, BoardId, Save } from "./types";
+import { BOARD_IDS, type BoardData, type BoardId, type Save } from "./types";
 
 /** The rank shown for a saved item that is on no board any more. */
 export const OFF_BOARD_RANK = 0;
@@ -28,6 +28,13 @@ export function savedRows(data: BoardData, saves: Save[], series: Series): HourR
       const points = series[save.key] ?? [];
       return [{ boardId: save.boardId, rank: rankNow(data, save.key, save.boardId), item, points, at: points.length ? points[points.length - 1].at : null }];
     });
+}
+
+/** The saved rows grouped by the board each was saved from, boards in the page's order, only boards with something
+ *  saved (user, 2026-11-01: "can Saved be sorted by board?"). */
+export function savedByBoard(data: BoardData, saves: Save[], series: Series): { boardId: BoardId; rows: HourRow[] }[] {
+  const rows = savedRows(data, saves, series);
+  return BOARD_IDS.map((boardId) => ({ boardId, rows: rows.filter((r) => r.boardId === boardId) })).filter((g) => g.rows.length > 0);
 }
 
 /** Saved items the page has not read: ones that left every board before the page opened. */

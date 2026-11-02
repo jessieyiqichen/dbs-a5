@@ -23,6 +23,10 @@ interface Props {
   now: Date;
   /** Name each row's board: the feed across every followed board. */
   showBoard?: boolean;
+  /** With showBoard, leave the board's name off each row: the rows sit under a heading that names it (Saved, grouped). */
+  underBoardHeading?: boolean;
+  /** Scroll inside a window of fixed height (a board's ranking); false when the caller scrolls a larger list. */
+  scroll?: boolean;
   /** Keys of the items this person saved, and what the mark beside each score does (user, 2026-11-01). */
   saved: Set<string>;
   onToggleSave: (row: HourRow) => void;
@@ -32,7 +36,7 @@ const rowKey = (row: HourRow) => `${row.boardId}|${row.item.key}`;
 
 /** Rows that each draw their own hour on their own scale, and slide to their new place when the order changes (the
  *  user, 2026-11-01: a ranking that moves, with each item's own change in it, not a race and not a feed). */
-export function HourRows({ rows, quiet = [], keywords, now, showBoard = false, saved, onToggleSave }: Props) {
+export function HourRows({ rows, quiet = [], keywords, now, showBoard = false, underBoardHeading = false, scroll = true, saved, onToggleSave }: Props) {
   const [open, setOpen] = useState<HourRow | null>(null);
   const list = useFlip<HTMLOListElement>(rows.map(rowKey).join(","));
   return (
@@ -41,9 +45,9 @@ export function HourRows({ rows, quiet = [], keywords, now, showBoard = false, s
         <p className="px-4 py-6 font-bh-mono text-sm">{showBoard ? "Nothing on your boards has moved in the last hour." : "No rows on this board right now."}</p>
       ) : (
         // A window of a fixed height that scrolls, so a 30-row board does not stretch the page (user, 2026-11-01)
-        <ol ref={list} className="max-h-[34rem] overflow-y-auto overscroll-contain">
+        <ol ref={list} className={scroll ? "max-h-[34rem] overflow-y-auto overscroll-contain" : ""}>
           {rows.map((row) => (
-            <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} onOpen={() => setOpen(row)} isSaved={saved.has(row.item.key)} onToggleSave={() => onToggleSave(row)} />
+            <Row key={rowKey(row)} row={row} keywords={keywords} now={now} showBoard={showBoard} nameBoard={!underBoardHeading} onOpen={() => setOpen(row)} isSaved={saved.has(row.item.key)} onToggleSave={() => onToggleSave(row)} />
           ))}
         </ol>
       )}
@@ -58,12 +62,13 @@ interface RowProps {
   keywords: string[];
   now: Date;
   showBoard: boolean;
+  nameBoard: boolean;
   onOpen: () => void;
   isSaved: boolean;
   onToggleSave: () => void;
 }
 
-function Row({ row, keywords, now, showBoard, onOpen, isSaved, onToggleSave }: RowProps) {
+function Row({ row, keywords, now, showBoard, nameBoard, onOpen, isSaved, onToggleSave }: RowProps) {
   const { item, boardId } = row;
   const unit = SCORE_UNIT[boardId];
   const matched = itemKeywords(item, keywords);
@@ -80,7 +85,7 @@ function Row({ row, keywords, now, showBoard, onOpen, isSaved, onToggleSave }: R
         {showBoard ? (
           <>
             <span className="block">{row.at ? ageLabel(row.at, now) : "this hour"}</span>
-            <span className="block text-bh-muted">{BOARD_LOOK[boardId].short}</span>
+            {nameBoard && <span className="block text-bh-muted">{BOARD_LOOK[boardId].short}</span>}
           </>
         ) : (
           <span className="block text-base font-bold tabular-nums">{String(row.rank).padStart(2, "0")}</span>

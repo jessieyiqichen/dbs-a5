@@ -6,7 +6,7 @@ import { LOAD_FAILED, SAVE_FAILED, SAVES_LOAD_FAILED } from "@/lib/board/copy";
 import { SUGGESTED_KEYWORDS, followedBoards, keywordCounts, keywordsIn } from "@/lib/board/follows";
 import { freshness } from "@/lib/board/freshness";
 import { shownKeys } from "@/lib/board/live";
-import { savedKeys, savedRows } from "@/lib/board/saves";
+import { savedByBoard, savedKeys } from "@/lib/board/saves";
 import { RISING_TAB, SAVED_TAB, markSeen, pickTab, tabsFor, unseen, type Moves, type Tab } from "@/lib/board/tabs";
 import { boardWeights, type Series } from "@/lib/board/trends";
 import type { BoardData, BoardId } from "@/lib/board/types";
@@ -109,7 +109,7 @@ export function BoardScreen() {
             {open === RISING_TAB ? (
               <RisingTab data={data} boards={shown} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} />
             ) : open === SAVED_TAB ? (
-              <SavedTab rows={savedRows(data, mySaves, trends.series)} keywords={keywords} now={now} saved={saved} onToggleSave={onToggleSave} />
+              <SavedTab groups={savedByBoard(data, mySaves, trends.series)} keywords={keywords} now={now} saved={saved} onToggleSave={onToggleSave} />
             ) : (
               <OneBoard data={data} id={open} keywords={keywords} series={trends.series} now={now} saved={saved} onToggleSave={onToggleSave} onUnfollow={() => unfollow(open)} />
             )}

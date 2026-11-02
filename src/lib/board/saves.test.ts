@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readSnapshot } from "./rows";
-import { OFF_BOARD_RANK, missingSaved, savedKeys, savedRows } from "./saves";
+import { OFF_BOARD_RANK, missingSaved, savedByBoard, savedKeys, savedRows } from "./saves";
 import type { Save } from "./types";
 
 const board = (id: string) => ({ id, name: id, interval_seconds: 60, last_checked_at: null, last_ok_at: null, last_status: "ok", last_error: null });
@@ -51,6 +51,20 @@ describe("savedRows", () => {
     const row = savedRows(data, saves, series).find((r) => r.item.key === "hn:2");
     expect(row?.points).toHaveLength(2);
     expect(row?.at).toBe("2026-11-01T12:40:00Z");
+  });
+});
+
+describe("savedByBoard", () => {
+  it("groups saved items by the board they were saved from, boards in the page's order, newest save first in each", () => {
+    const more: Save[] = [...saves, { id: "d", key: "hn:1", boardId: "hn_front", savedAt: "2026-11-01T14:00:00Z" }];
+    const groups = savedByBoard(data, more, {});
+    expect(groups.map((g) => g.boardId)).toEqual(["hn_front", "producthunt"]);
+    expect(groups[0].rows.map((r) => r.item.key)).toEqual(["hn:1", "hn:2"]);
+    expect(groups[1].rows.map((r) => r.item.key)).toEqual(["producthunt:9"]);
+  });
+
+  it("leaves out a board with nothing saved, or whose saved items are not read yet", () => {
+    expect(savedByBoard(data, saves.slice(1), {}).map((g) => g.boardId)).toEqual(["producthunt"]);
   });
 });
 

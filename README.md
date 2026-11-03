@@ -74,7 +74,7 @@ Most of the traffic was the "rise in the last hour" column: a score change was t
 
 ## Testing
 
-- **410 unit tests** (vitest, `npm test`): 27 for the worker (parsers on saved responses from each site, the diff, a run on an in-memory store, the Product Hunt query asks for VOTES order and starts its day at Los Angeles midnight even on the days the clocks change), 85 for the page's logic (reading and checking rows, applying Realtime changes, freshness, follows and keyword matching, saved items, trends and step lines, tabs, the poster mosaic and title), the rest from Assignment 4. External calls are always faked.
+- **409 unit tests** (vitest, `npm test`): 27 for the worker (parsers on saved responses from each site, the diff, a run on an in-memory store, the Product Hunt query asks for VOTES order and starts its day at Los Angeles midnight even on the days the clocks change), 85 for the page's logic (reading and checking rows, applying Realtime changes, freshness, follows and keyword matching, saved items, trends and step lines, tabs, the poster mosaic and title), the rest from Assignment 4. External calls are always faked.
 - **Checked in the browser, by hand:** Realtime stayed connected across Clerk's 60-second token life (the first version dropped at exactly 60 s; the fix refreshes the token when less than 30 s is left and rejoins after a close); a rank swap written straight to the database moved the rows on screen; down and stale as above.
 
 ## Running it
